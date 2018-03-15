@@ -13,58 +13,22 @@ GLuint VBO;
 
 const char* pVSFileName = "shader.vs";
 const char* pFSFileName = "shader.fs";
-
+//tenir en compte el vector up si vull modificar obs i vrp.
 const float oBSx = 0;
 const float oBSy = 0;
-const float oBSz = 0;
+const float oBSz = -10;
 const float vRPx = 0;
 const float vRPy = 0;
-const float vRPz = 30;
+const float vRPz = 10;
 const float uPx = 0;
 const float uPy = 1;
 const float uPz = 0;
 const float fovy = 90;
 const float aspect = 1.;
 const float zNear = 0.1;
-const float zFar = 50;
+const float zFar = 75;
 const float widthPixels = 1024;
 const float heightPixels = 1024;
-
-void OgldevFileError(const char* pFileName, uint line, const char* pFileError)
-{
-#ifdef WIN32
-char msg[1000];
-_snprintf_s(msg, sizeof(msg), "%s:%d: unable to open file `%s`", pFileName, line, pFileError);
-MessageBoxA(NULL, msg, NULL, 0);
-#else
-fprintf(stderr, "%s:%d: unable to open file `%s`\n", pFileName, line, pFileError);
-#endif
-}
-
-bool ReadFile(const char* pFileName, string& outFile)
-{
-	ifstream f(pFileName);
-
-	bool ret = false;
-
-	if (f.is_open()) {
-		string line;
-		while (getline(f, line)) {
-			outFile.append(line);
-			outFile.append("\n");
-		}
-
-		f.close();
-
-		ret = true;
-	}
-	else {
-		OGLDEV_FILE_ERROR(pFileName);
-	}
-
-	return ret;
-}
-
 
 static void RenderSceneCB()
 {
@@ -91,9 +55,9 @@ static void CreateVertexBuffer()
 {
 	Vector3f Vertices[6];
 	Vertices[0] = Vector3f(1.0f, 1.0f, 0.0f);
-	Vertices[1] = Vector3f(-1.0f, -1.0f, 0.0f); 
+	Vertices[1] = Vector3f(-1.0f, -1.0f, 0.0f);
 	Vertices[2] = Vector3f(-1.0f, 1.0f, 0.0f);
-	
+
 	Vertices[3] = Vector3f(1.0f, 1.0f, 0.0f);
 	Vertices[4] = Vector3f(1.0f, -1.0f, 0.0f);
 	Vertices[5] = Vector3f(-1.0f, -1.0f, 0.0f);
