@@ -128,9 +128,9 @@ float opIntersection( float d1, float d2 )
 float objectesEscena(vec3 punt){
 	//return sdSphere(punt, 1);
 	//return udBox(punt);
-	//return sdTorus(punt);
+	return sdTorus(punt);
 	//return sdCylinder(punt);
-	return sdCone(punt);
+	//return sdCone(punt);
 	//return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
 	//return opSubstraction(udBox(punt), sdSphere(punt, 1.5));
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
