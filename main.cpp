@@ -45,10 +45,18 @@ static void RenderSceneCB()
 	glutSwapBuffers();
 }
 
+void processKeys(unsigned char key, int x, int y) {
+	switch (key) {
+	case 27: //glutDestroyWindow(ShaderProgram);
+		exit(0);
+		break;
+	}
+}
 
 static void InitializeGlutCallbacks()
 {
 	glutDisplayFunc(RenderSceneCB);
+	glutKeyboardFunc(processKeys);
 }
 
 static void CreateVertexBuffer()
