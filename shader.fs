@@ -17,9 +17,9 @@ uniform float widthpixels;
 uniform float heightpixels;
 
 //variables per l algorisme
-const int MAX_MARCHING_STEPS = 20;
+const int MAX_MARCHING_STEPS = 100;
 const float MIN_DIST = 0.0;
-const float MAX_DIST = 15.0;
+const float MAX_DIST = 25.0;
 const float EPSILON = 0.001;
 const vec3 PAS = vec3(0,0,0.5);
 
@@ -59,7 +59,7 @@ vec3 getDirectionVectorNew(vec3 obs, float h, float w, float d, vec3 vrp, vec3 x
 	vec3 min = vrp - w/2 * xobs - h/2 * yobs;
 
 	vec3 direccio  = min + (w*gl_FragCoord.x)/widthpixels*xobs + (h*gl_FragCoord.y)/heightpixels * yobs;// + (w/2*widthpixels, h/2*heightpixels);
-	return normalize(direccio);
+	return normalize(direccio-obs);
 	//return min;
 }
 
@@ -71,13 +71,14 @@ float length(vec3 p){
 float sdSphere(vec3 p, float s )
 {
 	//vec3 centre = vec3(3,-3,4);
-	//return length(p-centre)-s;
-	return 1.;
+	vec3 centre = vec3(0,0,0);
+	return length(p-centre)-s;
+	//return 1.;
 }
 float udBox( vec3 p )
 {
-  vec3 mesures = vec3(1,1,1);//meitat de les mesures
-  vec3 centre = vec3(3,-3,4);
+  vec3 mesures = vec3(0.5,0.5,0.5);//meitat de les mesures
+  vec3 centre = vec3(1.25,1.25,0);
   //return length(max(abs(p - centre)-mesures,0.0));
   vec3 d = abs(p - centre) - mesures;
   return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
@@ -94,8 +95,14 @@ float sdTorus( vec3 p )
 
 float sdCylinder( vec3 p)
 {
-  vec3 c = vec3(3,2,0.5);
+  vec3 c = vec3(1.0,0.0,0.5);
   return length(p.xz-c.xy)-c.z;
+}
+
+float sdCappedCylinder( vec3 p, vec2 h )
+{
+  vec2 d = abs(vec2(length(p.xz),p.y)) - h;
+  return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
 
 float sdCone( vec3 p)
@@ -128,19 +135,20 @@ float opIntersection( float d1, float d2 )
 float objectesEscena(vec3 punt){
 	//return sdSphere(punt, 1);
 	//return udBox(punt);
-	return sdTorus(punt);
+	//return sdTorus(punt);
 	//return sdCylinder(punt);
+	return sdCappedCylinder(punt, vec2(1, 1));
 	//return sdCone(punt);
 	//return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
 	//return opSubstraction(udBox(punt), sdSphere(punt, 1.5));
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
 }
 
-float rayMarching(vec3 dir){
+float rayMarching(vec3 obs, vec3 dir){
 	//versio basica inicial del algorisme
 	float profunditat = MIN_DIST;
 	for(int i = 0; i <= MAX_MARCHING_STEPS; ++i){
-		float distColisio = objectesEscena(PAS + profunditat * dir);
+		float distColisio = objectesEscena(obs + profunditat * dir);
 		if(distColisio < EPSILON){
 			return profunditat;
 		}
@@ -171,7 +179,7 @@ void main()
 	aux = crossProduct(aux,v);
 	yobs = normalize(aux);
 	zobs = -v;
-	xobs = crossProduct(zobs, yobs);
+	xobs = crossProduct(yobs, zobs);
 
 	float h, w, d;
 	d = magnitude(vrpObs);
@@ -185,16 +193,18 @@ void main()
 	//vec3 direction = getDirectionVector(vec3(obsx, obsy, obsz), h, w, d, vrpVector);
 	vec3 direction = getDirectionVectorNew(vec3(obsx, obsy, obsz), h, w, d, vrpVector, xobs, yobs);
 	//float profunditat = 1;
-	float profunditat = rayMarching(direction);
+	float profunditat = rayMarching(vec3(obsx, obsy, obsz), direction);
 	
 	if(profunditat < MAX_DIST){
 		//FragColor = vec4(1, 0, 0, 1.0);
 		//FragColor = vec4((xobs), 1.0);
-		vec3 puntcolisio = vec3(profunditat * direction);
-		vec3 color = vec3(1,1,1) * -estimacioNormal(puntcolisio).z;
+		vec3 puntcolisio = vec3(obsx, obsy, obsz) + profunditat * direction;
+		vec3 normal = estimacioNormal(puntcolisio);
+		vec3 color = vec3(1,1,1) * normal.z;
 		FragColor = vec4(color, 1.0);
+		//FragColor = vec4(vec3(0.25*profunditat), 1.0);
 	}else{
-		FragColor = vec4(0.0, 0.0, 0.2, 1.0);
+		FragColor = vec4(0.9, 0.2, 0.2, 1.0);
 		//vec3 puntcolisio = vec3(profunditat * direction);
 		//FragColor = vec4(estimacioNormal(puntcolisio), 1.0);
 	}

@@ -16,10 +16,10 @@ const char* pFSFileName = "shader.fs";
 //tenir en compte el vector up si vull modificar obs i vrp.
 const float oBSx = 0;
 const float oBSy = 0;
-const float oBSz = -10;
+const float oBSz = 2;
 const float vRPx = 0;
 const float vRPy = 0;
-const float vRPz = 10;
+const float vRPz = 0;
 const float uPx = 0;
 const float uPy = 1;
 const float uPz = 0;
