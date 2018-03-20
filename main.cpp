@@ -110,15 +110,10 @@ void static cameraDeclaration() {
 }
 
 void static uniformDeclaration(GLuint ShaderProgram) {
-	glUniform1f(glGetUniformLocation(ShaderProgram, "obsx"), oBSx);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "obsy"), oBSy);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "obsz"), oBSz);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "vrpx"), vRPx);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "vrpy"), vRPy);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "vrpz"), vRPz);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "upx"), uPx);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "upy"), uPy);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "upz"), uPz);
+	glUniform3f(glGetUniformLocation(ShaderProgram, "vObs"), oBSx, oBSy, oBSz);
+	glUniform3f(glGetUniformLocation(ShaderProgram, "vVrp"), vRPx, vRPy, vRPz);
+	glUniform3f(glGetUniformLocation(ShaderProgram, "vUp"), uPx, uPy, uPz);
+
 	glUniform1f(glGetUniformLocation(ShaderProgram, "fovy"), fovy);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "aspect"), aspect);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "znear"), zNear);
