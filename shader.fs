@@ -1,8 +1,7 @@
 #version 330
 
 //per algun motiu nomes executa si tinc aquestes 2 vars declarades
-uniform float vrpx;
-uniform float vrpy;
+
 
 uniform vec3 vObs;
 uniform vec3 vVrp;
@@ -21,6 +20,9 @@ const float MIN_DIST = 0.0;
 const float MAX_DIST = 25.0;
 const float EPSILON = 0.001;
 
+//cada vec es 1 columna
+mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(1, 1, -1.5, 1));
+
 out vec4 FragColor;
 
 vec3 crossProduct(vec3 a, vec3 b){
@@ -35,10 +37,11 @@ vec3 getDirectionVectorNew(vec3 obs, float h, float w, float d, vec3 vrp, vec3 x
 	//return min;
 }
 
-float sdSphere(vec3 p, float s )
+float sdSphere(vec3 p, float s, mat4 transfMatrix )
 {
-	vec3 centre = vec3(0,0,0);
-	return length(p-centre)-s;
+	p = (inverse(transfMatrix)* vec4(p, 1.0)).xyz;
+	//vec3 centre = vec3(1,1,0);
+	return length(p)-s;
 }
 float udBox( vec3 p )
 {
@@ -95,15 +98,22 @@ float opIntersection( float d1, float d2 )
 {
     return max(d1,d2);
 }
+/*
+vec3 opTx( vec3 p, mat4 m,  )
+{
+    vec3 q = invert(m)*p;
+    return primitive(q);
+}
+*/
 
 float objectesEscena(vec3 punt){
-	//return sdSphere(punt, 1);
+	return sdSphere(punt, 1, identityTransf);
 	//return udBox(punt);
 	//return sdTorus(punt);
 	//return sdCylinder(punt);
 	//return sdCappedCylinder(punt, vec2(1, 1));
 	//return sdCone(punt);
-	return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
+	//return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
 	//return opSubstraction(udBox(punt), sdSphere(punt, 1.5));
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
 }
@@ -160,6 +170,6 @@ void main()
 	}else{
 		FragColor = vec4(0.9, 0.2, 0.2, 1.0);
 	}
-	//FragColor = vec4(vrpx,vrpy,0.0, 1.0);
+	//FragColor = vec4(1,1,0, 1.0);
 	
 }
