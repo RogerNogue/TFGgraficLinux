@@ -43,42 +43,43 @@ float sdSphere(vec3 p, float s, mat4 transfMatrix )
 	//vec3 centre = vec3(1,1,0);
 	return length(p)-s;
 }
-float udBox( vec3 p )
+
+float udBox( vec3 p, mat4 transfMatrix)
 {
+  p = (inverse(transfMatrix)* vec4(p, 1.0)).xyz;
   vec3 mesures = vec3(1,1,1);//meitat de les mesures
-  vec3 centre = vec3(0,0,0);
-  vec3 d = abs(p - centre) - mesures;
+  vec3 d = abs(p) - mesures;
   return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
 }
 
-float sdTorus( vec3 p )
+float sdTorus( vec3 p, mat4 transfMatrix)
 {
-  vec3 centre = vec3(0,5,5);
-  p = p - centre;
-  vec2 t = vec2(2.0,1.0);
+  p = (inverse(transfMatrix)* vec4(p, 1.0)).xyz;
+  vec2 t = vec2(1.0,0.5);
   vec2 q = vec2(length(p.xz)-t.x,p.y);
   return length(q)-t.y;
 }
 
-float sdCylinder( vec3 p)
+float sdCylinder( vec3 p, mat4 transfMatrix)
 {
+  p = (inverse(transfMatrix)* vec4(p, 1.0)).xyz;
   vec3 c = vec3(1.0,0.0,0.5);
   return length(p.xz-c.xy)-c.z;
 }
 
-float sdCappedCylinder( vec3 p, vec2 h )
+float sdCappedCylinder( vec3 p, vec2 h, mat4 transfMatrix)
 {
+  p = (inverse(transfMatrix)* vec4(p, 1.0)).xyz;
   vec2 d = abs(vec2(length(p.xz),p.y)) - h;
   return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
 
-float sdCone( vec3 p)
+float sdCone( vec3 p, mat4 transfMatrix)
 {
+  p = (inverse(transfMatrix)* vec4(p, 1.0)).xyz;
 	//es com que el con es molt gran
 	// c must be normalized
-	vec2 c = normalize(vec2(1.,1.));
-	vec3 centre = vec3(2,2,2);
-	p = p - centre;
+	vec2 c = normalize(vec2(0.5,0.5));
     float q = length(p.xy);
     return dot(c,vec2(q,p.z));
 }
@@ -98,21 +99,30 @@ float opIntersection( float d1, float d2 )
 {
     return max(d1,d2);
 }
-/*
-vec3 opTx( vec3 p, mat4 m,  )
-{
-    vec3 q = invert(m)*p;
-    return primitive(q);
+
+mat4 translation(float x, float y, float z){
+	return mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(x, y, z, 1));
 }
-*/
+
+mat4 rotation(int axis, float angle){
+	//axis == 0 x, axis == 1 y, else z
+	if(axis == 0){
+		return mat4(vec4(1, 0, 0, 0),vec4(0, cos(angle), sin(angle), 0),vec4(0, -sin(angle), cos(angle), 0),vec4(0, 0, 0, 1));
+	}else if(axis == 1){
+		return mat4(vec4(cos(angle), 0, sin(angle), 0),vec4(0, 1, 0, 0),vec4(-sin(angle), 0, cos(angle), 0),vec4(0, 0, 0, 1));
+	}else{
+		return mat4(vec4(cos(angle), sin(angle), 0, 0),vec4(-sin(angle), cos(angle), 0, 0),vec4(0, 0, 1, 0),vec4(0, 0, 0, 1));
+	}
+	
+}
 
 float objectesEscena(vec3 punt){
-	return sdSphere(punt, 1, identityTransf);
-	//return udBox(punt);
-	//return sdTorus(punt);
-	//return sdCylinder(punt);
-	//return sdCappedCylinder(punt, vec2(1, 1));
-	//return sdCone(punt);
+	//return sdSphere(punt, 1, translation(0,0,0));
+	//return udBox(punt, rotation(0, 180));
+	//return sdTorus(punt, rotation(0, 90));
+	//return sdCylinder(punt, rotation(0, 90));
+	//return sdCappedCylinder(punt, vec2(1, 1), rotation(0, 0));
+	return sdCone(punt, translation(0,0,-2)*rotation(0,5));
 	//return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
 	//return opSubstraction(udBox(punt), sdSphere(punt, 1.5));
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
