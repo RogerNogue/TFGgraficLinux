@@ -23,6 +23,8 @@ const float EPSILON = 0.001;
 //cada vec es 1 columna
 mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(1, 1, -1.5, 1));
 
+vec3 llumPuntual = vec3(0,-5,0);
+
 out vec4 FragColor;
 
 vec3 crossProduct(vec3 a, vec3 b){
@@ -117,12 +119,16 @@ mat4 rotation(int axis, float angle){
 }
 
 float objectesEscena(vec3 punt){
-	//return sdSphere(punt, 1, translation(0,0,0));
-	//return udBox(punt, rotation(0, 180));
+//les trans es fan en ordre de multiplicacio i les rotacions sobre l objecte, no sobre l origen. 
+//Un cop l objecte esta rotat, tambe ho estan els seues eixos
+
+	return sdSphere(punt, 1, translation(0,0,0));
+	//return udBox(punt, translation(2,0,0)*rotation(0, 180)*translation(0, 2, 0));
+	//return udBox(punt, translation(2,0,0)*translation(0, 2, 0)*rotation(0, -180));
 	//return sdTorus(punt, rotation(0, 90));
 	//return sdCylinder(punt, rotation(0, 90));
 	//return sdCappedCylinder(punt, vec2(1, 1), rotation(0, 0));
-	return sdCone(punt, translation(0,0,-2)*rotation(0,5));
+	//return sdCone(punt, translation(0,0,-2)*rotation(0,5));
 	//return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
 	//return opSubstraction(udBox(punt), sdSphere(punt, 1.5));
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
@@ -171,11 +177,12 @@ void main()
 	
 	vec3 direction = getDirectionVectorNew(vObs, h, w, d, vVrp, xobs, yobs);
 	float profunditat = rayMarching(vObs, direction);
-	
+
 	if(profunditat < MAX_DIST){
 		vec3 puntcolisio = vObs + profunditat * direction;
 		vec3 normal = estimacioNormal(puntcolisio);
-		vec3 color = vec3(1,1,1) * normal.z;
+		//vec3 color = vec3(1,1,1) * normal.z;//llum al origen
+		vec3 color = vec3(1,1,1) * dot(normal, (llumPuntual - puntcolisio)); //llum a la posicio de llumPuntual
 		FragColor = vec4(color, 1.0);
 	}else{
 		FragColor = vec4(0.9, 0.2, 0.2, 1.0);
