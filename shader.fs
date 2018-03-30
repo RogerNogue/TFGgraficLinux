@@ -18,7 +18,10 @@ uniform float heightpixels;
 const int MAX_MARCHING_STEPS = 100;
 const float MIN_DIST = 0.0;
 const float MAX_DIST = 25.0;
+const float MAX_LIGHT_DIST = 25.0;
+const int MAX_MARCHING_LIGHT_STEPS = 50;
 const float EPSILON = 0.001;
+int lightReached = 0;
 
 //cada vec es 1 columna
 mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(1, 1, -1.5, 1));
@@ -134,12 +137,36 @@ float objectesEscena(vec3 punt){
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
 }
 
+void lightMarching(vec3 obs, float profunditat, vec3 dir){
+	//straight to the light source
+	float profCercaLlum = 2*EPSILON;
+	vec3 puntcolisio = vObs + profunditat * dir;
+	vec3 direccioLlum = normalize(llumPuntual - puntcolisio);
+	for(int i = 0; i <= MAX_MARCHING_LIGHT_STEPS; ++i){
+		
+		float distColisio = objectesEscena(puntcolisio + profCercaLlum * direccioLlum);
+		float distLlum = length(llumPuntual - (puntcolisio + profCercaLlum * direccioLlum));
+
+		if(distColisio < EPSILON){
+			return;
+		}
+		
+		if(distColisio - EPSILON < distLlum && distLlum < distColisio + EPSILON){
+			lightReached = 1;
+		}
+		
+		profCercaLlum += distColisio;
+		
+	}
+}
+
 float rayMarching(vec3 obs, vec3 dir){
 	//versio basica inicial del algorisme
 	float profunditat = MIN_DIST;
 	for(int i = 0; i <= MAX_MARCHING_STEPS; ++i){
 		float distColisio = objectesEscena(obs + profunditat * dir);
 		if(distColisio < EPSILON){
+			lightMarching(obs, profunditat, dir );
 			return profunditat;
 		}
 		profunditat += distColisio;
@@ -182,7 +209,7 @@ void main()
 		vec3 puntcolisio = vObs + profunditat * direction;
 		vec3 normal = estimacioNormal(puntcolisio);
 		//vec3 color = vec3(1,1,1) * normal.z;//llum al origen
-		vec3 color = vec3(1,1,1) * dot(normal, (llumPuntual - puntcolisio)); //llum a la posicio de llumPuntual
+		vec3 color = vec3(1,1,1) * lightReached * dot(normal, (llumPuntual - puntcolisio)); //llum a la posicio de llumPuntual
 		FragColor = vec4(color, 1.0);
 	}else{
 		FragColor = vec4(0.9, 0.2, 0.2, 1.0);
