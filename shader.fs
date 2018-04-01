@@ -19,14 +19,14 @@ const int MAX_MARCHING_STEPS = 100;
 const float MIN_DIST = 0.0;
 const float MAX_DIST = 25.0;
 const float MAX_LIGHT_DIST = 25.0;
-const int MAX_MARCHING_LIGHT_STEPS = 50;
+const int MAX_MARCHING_LIGHT_STEPS = 100;
 const float EPSILON = 0.001;
 int lightReached = 0;
 
 //cada vec es 1 columna
 mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(1, 1, -1.5, 1));
 
-vec3 llumPuntual = vec3(0,-5,0);
+vec3 llumPuntual = vec3(2,-4,0);
 
 out vec4 FragColor;
 
@@ -125,7 +125,7 @@ float objectesEscena(vec3 punt){
 //les trans es fan en ordre de multiplicacio i les rotacions sobre l objecte, no sobre l origen. 
 //Un cop l objecte esta rotat, tambe ho estan els seues eixos
 
-	return sdSphere(punt, 1, translation(0,0,0));
+	//return sdSphere(punt, 1, translation(0,0,0));
 	//return udBox(punt, translation(2,0,0)*rotation(0, 180)*translation(0, 2, 0));
 	//return udBox(punt, translation(2,0,0)*translation(0, 2, 0)*rotation(0, -180));
 	//return sdTorus(punt, rotation(0, 90));
@@ -133,13 +133,13 @@ float objectesEscena(vec3 punt){
 	//return sdCappedCylinder(punt, vec2(1, 1), rotation(0, 0));
 	//return sdCone(punt, translation(0,0,-2)*rotation(0,5));
 	//return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
-	//return opSubstraction(udBox(punt), sdSphere(punt, 1.5));
+	return opSubstraction(udBox(punt,  translation(0,0,0)), sdSphere(punt, 1.5,  translation(0,0,0)));
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
 }
 
 void lightMarching(vec3 obs, float profunditat, vec3 dir){
 	//straight to the light source
-	float profCercaLlum = 2*EPSILON;
+	float profCercaLlum =10*EPSILON; //quan el valor es baix, sembla que xoca amb el mateix objecte
 	vec3 puntcolisio = vObs + profunditat * dir;
 	vec3 direccioLlum = normalize(llumPuntual - puntcolisio);
 	for(int i = 0; i <= MAX_MARCHING_LIGHT_STEPS; ++i){
@@ -151,7 +151,7 @@ void lightMarching(vec3 obs, float profunditat, vec3 dir){
 			return;
 		}
 		
-		if(distColisio - EPSILON < distLlum && distLlum < distColisio + EPSILON){
+		if(distLlum < distColisio){
 			lightReached = 1;
 		}
 		
