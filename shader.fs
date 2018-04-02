@@ -26,7 +26,7 @@ int lightReached = 0;
 //cada vec es 1 columna
 mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(1, 1, -1.5, 1));
 
-vec3 llumPuntual = vec3(2,-4,0);
+vec3 llumPuntual = vec3(5,-1,0);
 
 out vec4 FragColor;
 
@@ -126,15 +126,18 @@ float objectesEscena(vec3 punt){
 //Un cop l objecte esta rotat, tambe ho estan els seues eixos
 
 	//return sdSphere(punt, 1, translation(0,0,0));
-	//return udBox(punt, translation(2,0,0)*rotation(0, 180)*translation(0, 2, 0));
+	//return udBox(punt, translation(2,0,-1));
 	//return udBox(punt, translation(2,0,0)*translation(0, 2, 0)*rotation(0, -180));
 	//return sdTorus(punt, rotation(0, 90));
 	//return sdCylinder(punt, rotation(0, 90));
 	//return sdCappedCylinder(punt, vec2(1, 1), rotation(0, 0));
 	//return sdCone(punt, translation(0,0,-2)*rotation(0,5));
 	//return opUnion(sdSphere(punt, 1.5), udBox(punt)); //sembla que fa coses rares
-	return opSubstraction(udBox(punt,  translation(0,0,0)), sdSphere(punt, 1.5,  translation(0,0,0)));
+	//return opSubstraction(udBox(punt,  translation(0,0,0)), sdSphere(punt, 1.5,  translation(0,0,0)));
 	//return opIntersection(sdSphere(punt, 1.5), udBox(punt));
+
+	return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2)));
+	
 }
 
 void lightMarching(vec3 obs, float profunditat, vec3 dir){
