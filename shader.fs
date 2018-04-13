@@ -301,10 +301,11 @@ void main()
 		vec3 color = vec3(0,0,0) * normal.z;//llum al origen
 		vec3 colAmbient = ambientColor(int(material));
 		if(lightReached == 1){
-			color = diffuseColor(int(material)) * (lightReached ) * dot(normal, (llumPuntual - puntcolisio)); //llum a la posicio de llumPuntual
-			color.x = max(colAmbient.x, color.x);
-			color.y = max(colAmbient.y, color.y);
-			color.z = max(colAmbient.z, color.z);
+			color = diffuseColor(int(material)) * (lightReached ) * max(dot(normal, normalize(llumPuntual - puntcolisio)), 0.0); //llum a la posicio de llumPuntual
+			color += colAmbient;
+			//color.x = max(colAmbient.x, color.x);
+			//color.y = max(colAmbient.y, color.y);
+			//color.z = max(colAmbient.z, color.z);
 			//color = diffuseColor(int(material));
 		}else{
 			color = colAmbient;
