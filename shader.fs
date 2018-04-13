@@ -269,7 +269,8 @@ vec2 rayMarching(vec3 obs, vec3 dir){
 		}
 	}
 	
-	return vec2(MAX_DIST, 0.);
+	lightMarching(obs, profunditat, dir );
+	return vec2(profunditat, material);
 }
 
 void main()
