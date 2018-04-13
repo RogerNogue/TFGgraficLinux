@@ -156,7 +156,7 @@ vec2 opSubstraction( vec2 d1, vec2 d2 )
 {
     //return max(d1,-d2);
 	if(d1.x > -d2.x) return d1;
-	return -d2;
+	return vec2(-d2.x, d2.y);
 }
 
 vec2 opIntersection( vec2 d1, vec2 d2 )
