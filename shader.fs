@@ -17,19 +17,35 @@ uniform float heightpixels;
 //variables per l algorisme
 const int MAX_MARCHING_STEPS = 100;
 const float MIN_DIST = 0.0;
-const float MAX_DIST = 25.0;
+const float MAX_DIST = 75.0;
 const float MAX_LIGHT_DIST = 25.0;
-const int MAX_MARCHING_LIGHT_STEPS = 100;
+const int MAX_MARCHING_LIGHT_STEPS = 125;
 const float EPSILON = 0.001;
-int lightReached = 0;
+//int lightReached = 0;
 
 //cada vec es 1 columna
-mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(1, 1, -1.5, 1));
+mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),vec4(0, 0, 0, 1));
 
-vec3 llumPuntual = vec3(5,5,0);
+//posicio, intensitat
+vec4 llumsPuntuals[3] = vec4[3](
+	vec4(-10, 2, 5, 0.5),
+	vec4(0, 1, 8, 0.6),
+	vec4(10,15,5, 0.9)
+	);
+
+	//vec4(10,20,5, 0.9)
+
+int lightsReached[3] = int[3](
+	0,0,0
+	);
+
+float specularIntensity = 0;
+
+float dmin = MAX_DIST;
 
 out vec4 FragColor;
 /*
+http://devernay.free.fr/cours/opengl/materials.html
 materials:
 1 -> emerald
 2 -> jade
@@ -41,9 +57,10 @@ materials:
 8 -> cyan rubber
 9 -> green rubber
 10 -> pearl
+11 -> yellow
 */
 
-vec3 materialAmbient[10] = vec3[10](
+vec3 materialAmbient[11] = vec3[11](
 	vec3(0.0215, 0.1745, 0.0215),
 	vec3(0.135, 0.2225, 0.1575),
 	vec3(0.1745, 0.01175, 0.01175),
@@ -53,10 +70,11 @@ vec3 materialAmbient[10] = vec3[10](
 	vec3(0.05, 0, 0),
 	vec3(0, 0.05, 0.05),
 	vec3(0, 0.05, 0),
-	vec3(0.25, 0.20725, 0.20725)
+	vec3(0.25, 0.20725, 0.20725),
+	vec3(0.4, 0.32, 0.2)
 	);
 
-vec3 materialDiffuse[10] = vec3[10](
+vec3 materialDiffuse[11] = vec3[11](
 	vec3(0.07568, 0.61424, 0.07568),
 	vec3(0.54, 0.89, 0.63),
 	vec3(0.61424, 0.04136, 0.04136),
@@ -66,16 +84,37 @@ vec3 materialDiffuse[10] = vec3[10](
 	vec3(0.5, 0.4, 0.4),
 	vec3(0.4, 0.5, 0.5),
 	vec3(0.4, 0.5, 0.4),
-	vec3(1, 0.829, 0.829)
+	vec3(1, 0.829, 0.829),
+	vec3(0.7, 0.62, 0.4)
+	);
+
+//vec4, specular, shininess
+vec4 materialSpecular[11] = vec4[11](
+	vec4(0.633, 0.727811, 0.633, 0.6),
+	vec4(0.316, 0.316, 0.316, 0.1),
+	vec4(0.728, 0.627, 0.627, 0.6),
+	vec4(0.7, 0.6, 0.6, 0.25),
+	vec4(0.5, 0.5, 0.5, 0.25),
+	vec4(0.45, 0.55, 0.45, 0.25),
+	vec4(0.7, 0.04, 0.04, 0.078),
+	vec4(0.04, 0.7, 0.7, 0.078),
+	vec4(0.04, 0.7, 0.04, 0.078),
+	vec4(0.29, 0.29, 0.29, 0.088),
+	vec4(0.8, 0.8, 0.5, 0.078)
 	);
 vec3 ambientColor(int material){
-	if(material < 0 || material > 10) return vec3(1,1,1);
+	if(material < 0 || material > 11) return vec3(1,1,1);
 	return materialAmbient[material-1];
 }
 
 vec3 diffuseColor(int material){
-	if(material < 0 || material > 10) return vec3(1,1,1);
+	if(material < 0 || material > 11) return vec3(1,1,1);
 	return materialDiffuse[material-1];
+}
+
+vec4 specularColor(int material){
+	if(material < 0 || material > 11) return vec4(1,1,1, 1);
+	return materialSpecular[material-1];
 }
 
 vec3 crossProduct(vec3 a, vec3 b){
@@ -204,15 +243,30 @@ vec2 objectesEscena(vec3 punt){
 	//return opUnion(opUnion(sdSphere(punt, 1, translation(0,2,-1), 2.), udBox(punt, translation(0,0,-1), vec3(1,1,1), 6.)), udBox(punt, translation(0,-1,0), vec3(5, 0.01, 5), 10));
 
 	//escena amb totes les figures
+	/*
 	return 
 			opUnion(
 			opUnion(
 			opUnion(
 			opUnion(
 			opUnion(
-			opUnion( opUnion(sdSphere(punt, 1, translation(3,0,-1), 2.), udBox(punt, translation(0,0,-1), vec3(1,1,1), 6.)), udBox(punt, translation(0,-1,0), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-3,-1,0), 1)), sdCylinder(punt, translation(2,-1, -4), 3))
-						,sdCappedCylinder(punt, vec2(1, 1), translation(-3,0,-3), 4)), sdCone(punt, translation(0,0,-5)*rotation(0,90), 5)), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
+			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
+						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
+	*/
 	
+	return
+			opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(
+			opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(
+			opUnion(opUnion(opUnion(opUnion(opUnion(
+			sdSphere(punt, 0.1, translation(10,0.1,18.0), 11.), sdSphere(punt, 0.1, translation(13,0.1,16.0), 11.)), sdSphere(punt, 0.1, translation(9,0.1,16.4), 11.)), sdSphere(punt, 0.1, translation(11.2,0.1,16.6), 11.)), sdSphere(punt, 0.1, translation(12,0.1,15), 11.)),
+			sdCappedCylinder(punt, vec2(0.05, 1.00), translation(13.05,0.2,16.9)*rotation(0,-40), 10)), sdCappedCylinder(punt, vec2(0.05, 1.05), translation(11,0.15,16.9)*rotation(0,-40), 10)), udBox(punt, translation(10.95,0.1,16.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(13.05,0.1,16.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(12,1,16.25), vec3(1.05,0.05,0.02), 10.)), udBox(punt, translation(13,0,16.25), vec3(0.05,1,0.02), 10.)), udBox(punt, translation(11,0,16.25), vec3(0.05,1,0.02), 10.)),
+			sdCappedCylinder(punt, vec2(0.05, 1.05), translation(13.05,0.2,7.3)*rotation(0,42), 10)), sdCappedCylinder(punt, vec2(0.05, 1.05), translation(11,0.15,7.3)*rotation(0,42), 10)), udBox(punt, translation(10.95,0.1,7.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(13.05,0.1,7.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(12,1,8), vec3(1.05,0.05,0.02), 10.)), udBox(punt, translation(13,0,8), vec3(0.05,1,0.02), 10.)), udBox(punt, translation(11,0,8), vec3(0.05,1,0.02), 10.)),
+			sdCappedCylinder(punt, vec2(0.3, 1.5), translation(5,0,7), 7)), sdCappedCylinder(punt, vec2(0.3, 1.5), translation(5,0,5), 7)), udBox(punt, translation(5,0.,17), vec3(0.25,1,10), 3.)), udBox(punt, translation(15,0.,5), vec3(10,1,0.25), 3.)), udBox(punt, translation(12,0.015,12), vec3(4,0.01,5.5), 3.)), udBox(punt, translation(12,0.02,12), vec3(3.5,0.01,5), 5.)), udBox(punt, translation(3,0.5,20), vec3(0.01,0.5,0.3), 4.)), udBox(punt, translation(3,7,19), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,19), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,-1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,-1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,10,-1), vec3(0.01,0.5,0.3), 2.)),
+			udBox(punt, translation(3,10,1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,0.5,0), vec3(0.01,0.5,0.3), 4.)), udBox(punt, translation(3,0.5,9.5), vec3(0.01,0.5,0.3), 4.)), udBox(punt, translation(3,10,9), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,10,11), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,9), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,11), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,9), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,11), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(9,4,3), vec3(0.3,0.5,0.01), 2.)), 
+			udBox(punt, translation(9.8,0.5,3), vec3(0.3,0.5,0.01), 4.)), udBox(punt, translation(11,10,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(11,7,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(9,10,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(9,7,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(11,4,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(10,4,0), vec3(3,8,3), 10.)), udBox(punt, translation(15,0.01,15), vec3(10,0.01,10), 1.)), udBox(punt, translation(0,4,-10), vec3(3,8,3), 10.)), udBox(punt, translation(0,4,20), vec3(3,8,3), 10.)),
+			udBox(punt, translation(0,4,10), vec3(3,8,3), 10.)), udBox(punt, translation(0,4,0), vec3(3,8,3), 10.)), udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10)
+			);
+			
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }
@@ -227,25 +281,38 @@ vec3 estimacioNormal(vec3 p){
 
 void lightMarching(vec3 obs, float profunditat, vec3 dir){
 	//straight to the light source
-	float profCercaLlum =2*EPSILON; //quan el valor es baix, sembla que xoca amb el mateix objecte
 	vec3 puntcolisio = vObs + profunditat * dir;
-	puntcolisio = puntcolisio + 2*EPSILON*estimacioNormal(puntcolisio);
-	vec3 direccioLlum = normalize(llumPuntual - puntcolisio);
-	for(int i = 0; i <= MAX_MARCHING_LIGHT_STEPS; ++i){
-		vec3 puntActual = puntcolisio + profCercaLlum * direccioLlum;
-		float distColisio = objectesEscena(puntActual).x;
-		float distLlum = length(llumPuntual - (puntActual));
+	puntcolisio = puntcolisio + 5*EPSILON*estimacioNormal(puntcolisio);
+	//puntcolisio = puntcolisio + 0.5*estimacioNormal(puntcolisio);
+	for(int j = 0; j < llumsPuntuals.length(); ++j){
+		float profCercaLlum =2*EPSILON; //quan el valor es baix, sembla que xoca amb el mateix objecte
+		vec3 direccioLlum = normalize(llumsPuntuals[j].xyz - puntcolisio);
+		for(int i = 0; i <= MAX_MARCHING_LIGHT_STEPS; ++i){
+			vec3 puntActual = puntcolisio + profCercaLlum * direccioLlum;
+			float distColisio = objectesEscena(puntActual).x;
+			float distLlum = length(llumsPuntuals[j].xyz - (puntActual));
 
-		if(distColisio < EPSILON){
-			return;
+
+			//if(profCercaLlum > 0.05 && distColisio < dmin)	dmin = distColisio;
+			//if(profCercaLlum > 0.01 && distColisio < dmin)	dmin = distColisio;
+			if(profCercaLlum > 0.009 && distColisio < dmin)	dmin = distColisio;
+
+			if(distColisio < EPSILON){
+				continue;
+			}
+		
+			if(distLlum < distColisio){
+				lightsReached[j] = 1;
+				//calcul especular
+				vec3 half = normalize(direccioLlum + normalize(obs - puntcolisio));
+				vec3 n = estimacioNormal(puntcolisio);
+				if(dot(n, direccioLlum) > 0)
+					specularIntensity = clamp(dot(n, half), 0, 1);
+			}
+		
+			profCercaLlum += distColisio;
+		
 		}
-		
-		if(distLlum < distColisio){
-			lightReached = 1;
-		}
-		
-		profCercaLlum += distColisio;
-		
 	}
 }
 
@@ -260,7 +327,6 @@ vec2 rayMarching(vec3 obs, vec3 dir){
 		float distColisio = colisio.x;
 		material = int(colisio.y);
 		if(distColisio < EPSILON){
-			lightMarching(obs, profunditat, dir );
 			return vec2(profunditat, material);
 		}
 		profunditat += distColisio;
@@ -268,8 +334,6 @@ vec2 rayMarching(vec3 obs, vec3 dir){
 			return vec2(MAX_DIST, 0.);
 		}
 	}
-	
-	lightMarching(obs, profunditat, dir );
 	return vec2(profunditat, material);
 }
 
@@ -293,27 +357,37 @@ void main()
 	vec3 direction = getDirectionVectorNew(vObs, h, w, d, vVrp, xobs, yobs);
 	vec2 prof = rayMarching(vObs, direction);
 	float profunditat = prof.x;
+	lightMarching(vObs, profunditat, direction );
 	float material = prof.y;
-
+	vec3 puntcolisio = vObs + profunditat * direction;
 	if(profunditat < MAX_DIST){
-		vec3 puntcolisio = vObs + profunditat * direction;
 		vec3 normal = estimacioNormal(puntcolisio);
 		vec3 color = vec3(0,0,0) * normal.z;//llum al origen
 		vec3 colAmbient = ambientColor(int(material));
-		if(lightReached == 1){
-			color = diffuseColor(int(material)) * (lightReached ) * max(dot(normal, normalize(llumPuntual - puntcolisio)), 0.0); //llum a la posicio de llumPuntual
-			color += colAmbient;
-			//color.x = max(colAmbient.x, color.x);
-			//color.y = max(colAmbient.y, color.y);
-			//color.z = max(colAmbient.z, color.z);
-			//color = diffuseColor(int(material));
-		}else{
-			color = colAmbient;
+		float maxValueLight = 0;
+		int lighted = 0;
+		for(int i = 0; i < llumsPuntuals.length(); ++i){
+			if(specularIntensity * llumsPuntuals[i].w > 0.899){
+				vec4 infoSpecular = specularColor(int(material));
+				color = infoSpecular.xyz * pow(specularIntensity, infoSpecular.w);
+				//color = vec3(1,1,1);
+			}else if(lightsReached[i] == 1 && llumsPuntuals[i].w > maxValueLight){
+				maxValueLight = llumsPuntuals[i].w;
+				color = diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * max(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0.0); //llum a la posicio de llumPuntual
+				color += colAmbient;
+				lighted = 1;
+			}else{
+				//color = colAmbient;
+				color = colAmbient * min(dmin, 2);
+			}
 		}
-		
 		FragColor = vec4(color, 1.0);
 	}else{
-		FragColor = vec4(0.9, 0.2, 0.2, 1.0);
+		if(puntcolisio.y <= 0){
+			FragColor = vec4(1, 0.75, 0.5, 1);
+		}else{
+			FragColor = vec4(puntcolisio.y/25, puntcolisio.y/12, 1, 1.0);
+		}
 	}
 	//FragColor = vec4(1,1,0, 1.0);
 	
