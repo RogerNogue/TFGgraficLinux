@@ -243,7 +243,7 @@ vec2 objectesEscena(vec3 punt){
 	//return opUnion(opUnion(sdSphere(punt, 1, translation(0,2,-1), 2.), udBox(punt, translation(0,0,-1), vec3(1,1,1), 6.)), udBox(punt, translation(0,-1,0), vec3(5, 0.01, 5), 10));
 
 	//escena amb totes les figures
-	/*
+	
 	return 
 			opUnion(
 			opUnion(
@@ -252,8 +252,8 @@ vec2 objectesEscena(vec3 punt){
 			opUnion(
 			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
 						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
-	*/
 	
+	/*
 	return
 			opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(
 			opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(
@@ -266,7 +266,7 @@ vec2 objectesEscena(vec3 punt){
 			udBox(punt, translation(9.8,0.5,3), vec3(0.3,0.5,0.01), 4.)), udBox(punt, translation(11,10,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(11,7,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(9,10,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(9,7,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(11,4,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(10,4,0), vec3(3,8,3), 10.)), udBox(punt, translation(15,0.01,15), vec3(10,0.01,10), 1.)), udBox(punt, translation(0,4,-10), vec3(3,8,3), 10.)), udBox(punt, translation(0,4,20), vec3(3,8,3), 10.)),
 			udBox(punt, translation(0,4,10), vec3(3,8,3), 10.)), udBox(punt, translation(0,4,0), vec3(3,8,3), 10.)), udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10)
 			);
-			
+	*/
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }

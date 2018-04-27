@@ -161,6 +161,7 @@ void processKeys(unsigned char key, int x, int y) {
 		break;
 	case 'r':
 		CompileShaders();
+		glutPostRedisplay();
 		break;
 	}
 }
