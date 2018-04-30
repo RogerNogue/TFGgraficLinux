@@ -43,7 +43,9 @@ float specularIntensity[3] = float[3](
 	0,0,0
 	);
 
-float dmin = MAX_DIST;
+float dmin[3] = float[3](
+	MAX_DIST, MAX_DIST, MAX_DIST
+	);
 
 out vec4 FragColor;
 /*
@@ -246,7 +248,7 @@ vec2 objectesEscena(vec3 punt){
 	//return opUnion(opUnion(sdSphere(punt, 1, translation(0,2,-1), 2.), udBox(punt, translation(0,0,-1), vec3(1,1,1), 6.)), udBox(punt, translation(0,-1,0), vec3(5, 0.01, 5), 10));
 
 	//escena amb totes les figures
-	/*
+	
 	return 
 			opUnion(
 			opUnion(
@@ -255,8 +257,8 @@ vec2 objectesEscena(vec3 punt){
 			opUnion(
 			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
 						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
-	*/
 	
+	/*
 	//floor
 	vec2 floor = udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10);
 
@@ -364,7 +366,7 @@ vec2 objectesEscena(vec3 punt){
 
 	//retorn del resultat
 	return escena;
-	
+	*/
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }
@@ -390,7 +392,7 @@ void lightMarching(vec3 obs, vec3 puntcolisio){
 			float distColisio = objectesEscena(puntActual).x;
 			float distLlum = length(llumsPuntuals[j].xyz - (puntActual));
 
-			if(profCercaLlum > 0.01 && distColisio < dmin)	dmin = distColisio;
+			if(profCercaLlum > 0.4 && distColisio < dmin[j])	dmin[j] = distColisio;
 
 			if(distColisio < EPSILON){
 				continue;
@@ -463,9 +465,9 @@ void main()
 		vec4 infoSpecular = specularColor(int(material));
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
 			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)); //"Multiply the shininess by 128!"
-			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
+			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
 			//test ombres suaus
-			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min(dmin/0.5, 1); 
+			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min(dmin[i]/0.2, 1); 
 		}
 		FragColor = vec4(color, 1.0);
 	}else{
