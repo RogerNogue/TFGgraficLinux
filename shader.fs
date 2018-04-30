@@ -28,9 +28,9 @@ mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),ve
 
 //posicio, intensitat
 vec4 llumsPuntuals[3] = vec4[3](
-	vec4(-10, 2, 5, 0.5),
-	vec4(0, 1, 8, 0.6),
-	vec4(10,15,5, 0.9)
+	vec4(-10, 2, 5, 0.3),
+	vec4(-5, 1, -15, 0.4),
+	vec4(10,10,5, 0.3)
 	);
 
 	//vec4(10,20,5, 0.9)
@@ -39,7 +39,9 @@ int lightsReached[3] = int[3](
 	0,0,0
 	);
 
-float specularIntensity = 0;
+float specularIntensity[3] = float[3](
+	0,0,0
+	);
 
 float dmin = MAX_DIST;
 
@@ -224,6 +226,7 @@ mat4 rotation(int axis, float angle){
 
 
 vec2 objectesEscena(vec3 punt){
+//funcio on es declara l escena
 //les trans es fan en ordre de multiplicacio i les rotacions sobre l objecte, no sobre l origen. 
 //Un cop l objecte esta rotat, tambe ho estan els seues eixos
 
@@ -243,7 +246,7 @@ vec2 objectesEscena(vec3 punt){
 	//return opUnion(opUnion(sdSphere(punt, 1, translation(0,2,-1), 2.), udBox(punt, translation(0,0,-1), vec3(1,1,1), 6.)), udBox(punt, translation(0,-1,0), vec3(5, 0.01, 5), 10));
 
 	//escena amb totes les figures
-	
+	/*
 	return 
 			opUnion(
 			opUnion(
@@ -252,26 +255,122 @@ vec2 objectesEscena(vec3 punt){
 			opUnion(
 			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
 						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
-	
-	/*
-	return
-			opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(
-			opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(opUnion(
-			opUnion(opUnion(opUnion(opUnion(opUnion(
-			sdSphere(punt, 0.1, translation(10,0.1,18.0), 11.), sdSphere(punt, 0.1, translation(13,0.1,16.0), 11.)), sdSphere(punt, 0.1, translation(9,0.1,16.4), 11.)), sdSphere(punt, 0.1, translation(11.2,0.1,16.6), 11.)), sdSphere(punt, 0.1, translation(12,0.1,15), 11.)),
-			sdCappedCylinder(punt, vec2(0.05, 1.00), translation(13.05,0.2,16.9)*rotation(0,-40), 10)), sdCappedCylinder(punt, vec2(0.05, 1.05), translation(11,0.15,16.9)*rotation(0,-40), 10)), udBox(punt, translation(10.95,0.1,16.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(13.05,0.1,16.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(12,1,16.25), vec3(1.05,0.05,0.02), 10.)), udBox(punt, translation(13,0,16.25), vec3(0.05,1,0.02), 10.)), udBox(punt, translation(11,0,16.25), vec3(0.05,1,0.02), 10.)),
-			sdCappedCylinder(punt, vec2(0.05, 1.05), translation(13.05,0.2,7.3)*rotation(0,42), 10)), sdCappedCylinder(punt, vec2(0.05, 1.05), translation(11,0.15,7.3)*rotation(0,42), 10)), udBox(punt, translation(10.95,0.1,7.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(13.05,0.1,7.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(12,1,8), vec3(1.05,0.05,0.02), 10.)), udBox(punt, translation(13,0,8), vec3(0.05,1,0.02), 10.)), udBox(punt, translation(11,0,8), vec3(0.05,1,0.02), 10.)),
-			sdCappedCylinder(punt, vec2(0.3, 1.5), translation(5,0,7), 7)), sdCappedCylinder(punt, vec2(0.3, 1.5), translation(5,0,5), 7)), udBox(punt, translation(5,0.,17), vec3(0.25,1,10), 3.)), udBox(punt, translation(15,0.,5), vec3(10,1,0.25), 3.)), udBox(punt, translation(12,0.015,12), vec3(4,0.01,5.5), 3.)), udBox(punt, translation(12,0.02,12), vec3(3.5,0.01,5), 5.)), udBox(punt, translation(3,0.5,20), vec3(0.01,0.5,0.3), 4.)), udBox(punt, translation(3,7,19), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,19), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,-1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,-1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,10,-1), vec3(0.01,0.5,0.3), 2.)),
-			udBox(punt, translation(3,10,1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,0.5,0), vec3(0.01,0.5,0.3), 4.)), udBox(punt, translation(3,0.5,9.5), vec3(0.01,0.5,0.3), 4.)), udBox(punt, translation(3,10,9), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,10,11), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,9), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,11), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,9), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,11), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(9,4,3), vec3(0.3,0.5,0.01), 2.)), 
-			udBox(punt, translation(9.8,0.5,3), vec3(0.3,0.5,0.01), 4.)), udBox(punt, translation(11,10,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(11,7,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(9,10,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(9,7,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(11,4,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(10,4,0), vec3(3,8,3), 10.)), udBox(punt, translation(15,0.01,15), vec3(10,0.01,10), 1.)), udBox(punt, translation(0,4,-10), vec3(3,8,3), 10.)), udBox(punt, translation(0,4,20), vec3(3,8,3), 10.)),
-			udBox(punt, translation(0,4,10), vec3(3,8,3), 10.)), udBox(punt, translation(0,4,0), vec3(3,8,3), 10.)), udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10)
-			);
 	*/
+	
+	//floor
+	vec2 floor = udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10);
+
+	//bloc edifici 1
+	vec2 estructuraEdifici1 = udBox(punt, translation(0,4,0), vec3(3,8,3), 10.);
+
+	//decoracio
+	vec2 decoracioEdifici11 = opUnion( opUnion(udBox(punt, translation(3,4,1), vec3(0.01,0.5,0.3), 2.), udBox(punt, translation(3,7,1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,0.5,0), vec3(0.01,0.5,0.3), 4.));
+
+	vec2 decoracioEdifici12 = opUnion( opUnion(udBox(punt, translation(3,4,-1), vec3(0.01,0.5,0.3), 2.), udBox(punt, translation(3,10,-1), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,10,1), vec3(0.01,0.5,0.3), 2.));
+
+	vec2 decoracioEdifici13 = udBox(punt, translation(3,7,-1), vec3(0.01,0.5,0.3), 2.);
+
+	//unio parts edifici 1
+
+	vec2 edifici1 = opUnion(opUnion(opUnion(estructuraEdifici1, decoracioEdifici11), decoracioEdifici12), decoracioEdifici13);
+
+	//bloc edifici 2
+	vec2 estructuraEdifici2 = udBox(punt, translation(0,4,10), vec3(3,8,3), 10.);
+
+	//decoracio
+	vec2 decoracioEdifici21 = opUnion( opUnion(udBox(punt, translation(3,7,11), vec3(0.01,0.5,0.3), 2.), udBox(punt, translation(3,4,9), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,4,11), vec3(0.01,0.5,0.3), 2.));
+
+	vec2 decoracioEdifici22 = opUnion( opUnion(udBox(punt, translation(3,10,9), vec3(0.01,0.5,0.3), 2.), udBox(punt, translation(3,10,11), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,7,9), vec3(0.01,0.5,0.3), 2.));
+
+	vec2 decoracioEdifici23 = udBox(punt, translation(3,0.5,9.5), vec3(0.01,0.5,0.3), 4.);
+
+	//unio parts edifici 2
+	vec2 edifici2 = opUnion(opUnion(opUnion(estructuraEdifici2, decoracioEdifici21), decoracioEdifici22), decoracioEdifici23);
+
+	//bloc edifici 3
+	vec2 estructuraedifici3 = udBox(punt, translation(0,4,20), vec3(3,8,3), 10.);
+
+	//decoracio
+	vec2 decoracioEdifici31 = opUnion(opUnion(udBox(punt, translation(3,7,19), vec3(0.01,0.5,0.3), 2.), udBox(punt, translation(3,4,19), vec3(0.01,0.5,0.3), 2.)), udBox(punt, translation(3,0.5,20), vec3(0.01,0.5,0.3), 4.));
+
+	//unio parts edifici 3
+	vec2 edifici3 = opUnion(estructuraedifici3, decoracioEdifici31);
+
+	//bloc edifici 4
+	vec2 edifici4 = udBox(punt, translation(0,4,-10), vec3(3,8,3), 10.);
+
+	//bloc edifici 5
+	vec2 estructuraEdifici5 =  udBox(punt, translation(10,4,0), vec3(3,8,3), 10.);
+
+	//decoracio
+	vec2 decoracioEdifici51 = opUnion(opUnion(udBox(punt, translation(9,10,3), vec3(0.3,0.5,0.01), 2.), udBox(punt, translation(11,4,3), vec3(0.3,0.5,0.01), 2.)), udBox(punt, translation(9,7,3), vec3(0.3,0.5,0.01), 2.));
+
+	vec2 decoracioEdifici52 = opUnion(opUnion(udBox(punt, translation(9.8,0.5,3), vec3(0.3,0.5,0.01), 4.), udBox(punt, translation(11,10,3), vec3(0.3,0.5,0.01), 2.)),  udBox(punt, translation(11,7,3), vec3(0.3,0.5,0.01), 2.));
+
+	vec2 decoracioEdifici53 = udBox(punt, translation(9,4,3), vec3(0.3,0.5,0.01), 2.);
+
+	//unio parts edifici 5
+	vec2 edifici5 = opUnion(opUnion(opUnion(estructuraEdifici5, decoracioEdifici51), decoracioEdifici52), decoracioEdifici53);
+
+	//unio edificis sencers
+	vec2 edificis = opUnion(opUnion(opUnion(opUnion(edifici5, edifici4), edifici3), edifici2), edifici1);
+
+	//pati i continguts
+	vec2 pati = udBox(punt, translation(15,0.01,15), vec3(10,0.01,10), 1.);
+
+	vec2 camp = opUnion(udBox(punt, translation(12,0.015,12), vec3(4,0.01,5.5), 3.), udBox(punt, translation(12,0.02,12), vec3(3.5,0.01,5), 5.));
+
+	vec2 valles = opUnion(udBox(punt, translation(15,0.,5), vec3(10,1,0.25), 3.), udBox(punt, translation(5,0.,17), vec3(0.25,1,10), 3.));
+
+	vec2 portes = opUnion(sdCappedCylinder(punt, vec2(0.3, 1.5), translation(5,0,7), 7), sdCappedCylinder(punt, vec2(0.3, 1.5), translation(5,0,5), 7));
+	//unio estructura pati
+
+	vec2 unioPati = opUnion(opUnion(opUnion(portes, valles), camp), pati);
+
+	//porteria1
+	vec2 porteria11 = opUnion(opUnion(udBox(punt, translation(11,0,8), vec3(0.05,1,0.02), 10.), udBox(punt, translation(13,0,8), vec3(0.05,1,0.02), 10.)), udBox(punt, translation(12,1,8), vec3(1.05,0.05,0.02), 10.));
+	
+	vec2 porteria12 = opUnion(opUnion(sdCappedCylinder(punt, vec2(0.05, 1.05), translation(11,0.15,7.3)*rotation(0,42), 10), udBox(punt, translation(10.95,0.1,7.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(13.05,0.1,7.6), vec3(0.1,0.1,0.4), 10.));
+
+	vec2 porteria13 =  sdCappedCylinder(punt, vec2(0.05, 1.05), translation(13.05,0.2,7.3)*rotation(0,42), 10);
+
+	//unio porteria1
+
+	vec2 porteria1 = opUnion(opUnion(porteria11, porteria12), porteria13);
+
+	//porteria 2
+	vec2 porteria21 = opUnion(opUnion(udBox(punt, translation(13,0,16.25), vec3(0.05,1,0.02), 10.), udBox(punt, translation(11,0,16.25), vec3(0.05,1,0.02), 10.)),udBox(punt, translation(12,1,16.25), vec3(1.05,0.05,0.02), 10.));
+
+	vec2 porteria22 = opUnion(opUnion(sdCappedCylinder(punt, vec2(0.05, 1.05), translation(11,0.15,16.9)*rotation(0,-40), 10), udBox(punt, translation(10.95,0.1,16.6), vec3(0.1,0.1,0.4), 10.)), udBox(punt, translation(13.05,0.1,16.6), vec3(0.1,0.1,0.4), 10.));
+
+	vec2 porteria23 = sdCappedCylinder(punt, vec2(0.05, 1.00), translation(13.05,0.2,16.9)*rotation(0,-40), 10);
+
+	//unio porteria2
+	vec2 porteria2 = opUnion(opUnion(porteria21, porteria22), porteria23);
+
+	//pilotes
+	vec2 pilotes1 = opUnion(opUnion(sdSphere(punt, 0.1, translation(10,0.1,18.0), 11.), sdSphere(punt, 0.1, translation(12,0.1,15), 11.)), sdSphere(punt, 0.1, translation(13,0.1,16.0), 11.));
+
+	vec2 pilotes2 = opUnion(sdSphere(punt, 0.1, translation(9,0.1,16.4), 11.), sdSphere(punt, 0.1, translation(11.2,0.1,16.6), 11.));
+
+	vec2 pilotes = opUnion(pilotes1, pilotes2);
+
+	//unio pati sencer
+
+	vec2 patiSencer = opUnion(opUnion(opUnion(unioPati, pilotes), porteria2), porteria1);
+
+	//unio escena
+	vec2 escena = opUnion(opUnion(patiSencer, edificis), floor);
+
+	//retorn del resultat
+	return escena;
+	
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }
 
 vec3 estimacioNormal(vec3 p){
+//estimacio de la normal en un punt que es troba molt a prop de la superficie d un objecte
 	return normalize(vec3(	
 					objectesEscena(vec3(p.x + EPSILON, p.y, p.z)).x - objectesEscena(vec3(p.x - EPSILON, p.y, p.z)).x,
 					objectesEscena(vec3(p.x, p.y + EPSILON, p.z)).x - objectesEscena(vec3(p.x, p.y - EPSILON, p.z)).x,
@@ -279,10 +378,9 @@ vec3 estimacioNormal(vec3 p){
 					));
 }
 
-void lightMarching(vec3 obs, float profunditat, vec3 dir){
-	//straight to the light source
-	vec3 puntcolisio = vObs + profunditat * dir;
-	puntcolisio = puntcolisio + 5*EPSILON*estimacioNormal(puntcolisio);
+void lightMarching(vec3 obs, vec3 puntcolisio){
+	//funcio que va des del punt de colisio del algorisme cap a la llum
+	puntcolisio += 5*EPSILON*estimacioNormal(puntcolisio);
 	//puntcolisio = puntcolisio + 0.5*estimacioNormal(puntcolisio);
 	for(int j = 0; j < llumsPuntuals.length(); ++j){
 		float profCercaLlum =2*EPSILON; //quan el valor es baix, sembla que xoca amb el mateix objecte
@@ -292,10 +390,7 @@ void lightMarching(vec3 obs, float profunditat, vec3 dir){
 			float distColisio = objectesEscena(puntActual).x;
 			float distLlum = length(llumsPuntuals[j].xyz - (puntActual));
 
-
-			//if(profCercaLlum > 0.05 && distColisio < dmin)	dmin = distColisio;
-			//if(profCercaLlum > 0.01 && distColisio < dmin)	dmin = distColisio;
-			if(profCercaLlum > 0.009 && distColisio < dmin)	dmin = distColisio;
+			if(profCercaLlum > 0.01 && distColisio < dmin)	dmin = distColisio;
 
 			if(distColisio < EPSILON){
 				continue;
@@ -307,17 +402,15 @@ void lightMarching(vec3 obs, float profunditat, vec3 dir){
 				vec3 half = normalize(direccioLlum + normalize(obs - puntcolisio));
 				vec3 n = estimacioNormal(puntcolisio);
 				if(dot(n, direccioLlum) > 0)
-					specularIntensity = clamp(dot(n, half), 0, 1);
+					specularIntensity[j] = clamp(dot(n, half), 0, 1);
 			}
-		
 			profCercaLlum += distColisio;
-		
 		}
 	}
 }
 
 vec2 rayMarching(vec3 obs, vec3 dir){
-	//versio basica inicial del algorisme
+	//algorisme trobada del punt que pertany al fragment
 	
 	float profunditat = MIN_DIST;
 	int material;
@@ -355,31 +448,24 @@ void main()
 	w = 2*d*aspect*tan(fovy/2);
 	
 	vec3 direction = getDirectionVectorNew(vObs, h, w, d, vVrp, xobs, yobs);
+	//calcul punt colisio
 	vec2 prof = rayMarching(vObs, direction);
 	float profunditat = prof.x;
-	lightMarching(vObs, profunditat, direction );
-	float material = prof.y;
+	//calcul llums al punt
 	vec3 puntcolisio = vObs + profunditat * direction;
+	lightMarching(vObs, puntcolisio );
+	float material = prof.y;
+
+	//calcul color
 	if(profunditat < MAX_DIST){
 		vec3 normal = estimacioNormal(puntcolisio);
-		vec3 color = vec3(0,0,0) * normal.z;//llum al origen
-		vec3 colAmbient = ambientColor(int(material));
-		float maxValueLight = 0;
-		int lighted = 0;
+		vec3 color = ambientColor(int(material));
+		vec4 infoSpecular = specularColor(int(material));
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
-			if(specularIntensity * llumsPuntuals[i].w > 0.899){
-				vec4 infoSpecular = specularColor(int(material));
-				color = infoSpecular.xyz * pow(specularIntensity, infoSpecular.w);
-				//color = vec3(1,1,1);
-			}else if(lightsReached[i] == 1 && llumsPuntuals[i].w > maxValueLight){
-				maxValueLight = llumsPuntuals[i].w;
-				color = diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * max(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0.0); //llum a la posicio de llumPuntual
-				color += colAmbient;
-				lighted = 1;
-			}else{
-				//color = colAmbient;
-				color = colAmbient * min(dmin, 2);
-			}
+			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)); //"Multiply the shininess by 128!"
+			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
+			//test ombres suaus
+			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min(dmin/0.5, 1); 
 		}
 		FragColor = vec4(color, 1.0);
 	}else{
