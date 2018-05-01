@@ -48,6 +48,9 @@ float dmin[3] = float[3](
 	);
 
 out vec4 FragColor;
+
+float relaxationIndex = 1.5;//pertany a [1, 2)
+
 /*
 http://devernay.free.fr/cours/opengl/materials.html
 materials:
@@ -416,18 +419,33 @@ vec2 rayMarching(vec3 obs, vec3 dir){
 	
 	float profunditat = MIN_DIST;
 	int material;
+	float profunditatPasAnterior = 0;
+	float colisioPasAnterior = 0;
+	int paremRelaxation = 0;
 	for(int i = 0; i <= MAX_MARCHING_STEPS; ++i){
 		vec2 colisio = objectesEscena(obs + profunditat * dir);
+		//comprovem si hem de parar over relaxation
+		if(paremRelaxation == 0 && (abs(colisioPasAnterior)+abs(colisio.x) < colisioPasAnterior * relaxationIndex)) {
+			//si aixo es compleix, cal tirar enrere
+			profunditat = colisio.x + colisioPasAnterior*relaxationIndex*(1-relaxationIndex);
+			i-= 1;
+			relaxationIndex = 1;
+			paremRelaxation = 1;
+			continue;
+		}
 
 		float distColisio = colisio.x;
 		material = int(colisio.y);
 		if(distColisio < EPSILON){
 			return vec2(profunditat, material);
 		}
-		profunditat += distColisio;
+		profunditat += distColisio*relaxationIndex;
 		if(profunditat >= MAX_DIST){
 			return vec2(MAX_DIST, 0.);
 		}
+		//per calcular en el futur si hem de parar el metode d over relaxation
+		colisioPasAnterior = colisio.x;
+
 	}
 	return vec2(profunditat, material);
 }
