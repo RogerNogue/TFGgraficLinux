@@ -15,6 +15,7 @@ uniform float widthpixels;
 uniform float heightpixels;
 
 //variables per l algorisme
+const float MAX_REFLECTION_STEPS = 50;
 const int MAX_MARCHING_STEPS = 100;
 const float MIN_DIST = 0.0;
 const float MAX_DIST = 75.0;
@@ -28,9 +29,9 @@ mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),ve
 
 //posicio, intensitat
 vec4 llumsPuntuals[3] = vec4[3](
-	vec4(-10, 2, 5, 0.3),
-	vec4(-5, 1, -15, 0.4),
-	vec4(10,10,5, 0.3)
+	vec4(-10, 2, 5, 0.4),
+	vec4(-5, 1, -15, 0.3),
+	vec4(10,10,5, 0.4)
 	);
 
 	//vec4(10,20,5, 0.9)
@@ -49,7 +50,10 @@ float dmin[3] = float[3](
 
 out vec4 FragColor;
 
-float relaxationIndex = 1.5;//pertany a [1, 2)
+float relaxationIndex = 1.9;//pertany a [1, 2)
+
+float obscurancia = 0;
+float epsilonOcclusion = 0.5;
 
 /*
 http://devernay.free.fr/cours/opengl/materials.html
@@ -94,7 +98,7 @@ vec3 materialDiffuse[11] = vec3[11](
 	vec3(1, 0.829, 0.829),
 	vec3(0.7, 0.62, 0.4)
 	);
-
+//utilitzare el shininess com a coeficient de reflexio
 //vec4, specular, shininess
 vec4 materialSpecular[11] = vec4[11](
 	vec4(0.633, 0.727811, 0.633, 0.6),
@@ -395,10 +399,13 @@ void lightMarching(vec3 obs, vec3 puntcolisio){
 			float distColisio = objectesEscena(puntActual).x;
 			float distLlum = length(llumsPuntuals[j].xyz - (puntActual));
 
+			//calcul distancia mes propera per calcular les ombres suaus mes endavant
 			if(profCercaLlum > 0.4 && distColisio < dmin[j])	dmin[j] = distColisio;
 
+			//si no arriba a la llum, sortirm del bucle
 			if(distColisio < EPSILON){
-				continue;
+				//continue;
+				break;
 			}
 		
 			if(distLlum < distColisio){
@@ -450,6 +457,25 @@ vec2 rayMarching(vec3 obs, vec3 dir){
 	return vec2(profunditat, material);
 }
 
+float materialComponentReflexio(vec3 puntcolisio, vec3 obs){
+	vec3 raigObsPunt = normalize(puntcolisio - obs);
+	vec3 dirReflexio = reflect(raigObsPunt, estimacioNormal(puntcolisio));
+	float profCercaReflexio =2*EPSILON;
+	for(int i = 0; i < MAX_REFLECTION_STEPS; ++i){
+		vec3 puntActual = puntcolisio + profCercaReflexio * dirReflexio;
+		vec2 propietatsObjecteProper = objectesEscena(puntActual);
+		float distColisio = propietatsObjecteProper.x;
+		
+		//cas que ja hem arribat practicament al objecte 
+		if(distColisio < EPSILON){
+			return propietatsObjecteProper.y;
+		}
+		
+		profCercaReflexio += distColisio;
+	}
+	return -1;
+}
+
 void main()
 {
 	//declaracio vars
@@ -476,17 +502,28 @@ void main()
 	lightMarching(vObs, puntcolisio );
 	float material = prof.y;
 
+	//calcul obscurancia (ambient oclusion)
+	vec3 normal = estimacioNormal(puntcolisio);
+	vec3 pAux = puntcolisio + epsilonOcclusion*normal;
+	obscurancia = (epsilonOcclusion-objectesEscena(pAux).x)/epsilonOcclusion;
+
 	//calcul color
 	if(profunditat < MAX_DIST){
-		vec3 normal = estimacioNormal(puntcolisio);
-		vec3 color = ambientColor(int(material));
+		
+		vec3 color = ambientColor(int(material)) * (1-obscurancia);
 		vec4 infoSpecular = specularColor(int(material));
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
-			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)); //"Multiply the shininess by 128!"
+			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)) * (lightsReached[i]*llumsPuntuals[i].w ); //"Multiply the shininess by 128!"
 			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
 			//test ombres suaus
 			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min(dmin[i]/0.2, 1); 
 		}
+		//calcul component reflexio
+		float materialColorReflex = materialComponentReflexio(puntcolisio, vObs);
+		//com que no hi ha manera facil de saber exactament el color del objecte del que agafarem la reflexio
+		//utilitzare alguna de les propietats del material
+		//(1-c)*color pixel + c*color punt reflexat
+		if(materialColorReflex > 0) color = (1-infoSpecular.w*0.5)*color + infoSpecular.w*0.5*ambientColor(int(materialColorReflex));
 		FragColor = vec4(color, 1.0);
 	}else{
 		if(puntcolisio.y <= 0){
