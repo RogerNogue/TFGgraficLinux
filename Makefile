@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Wno-deprecated
+CFLAGS = -O2 -Wall -Wno-deprecated
 OS = $(shell uname)
 LIBS = -lstdc++ -lGL -lGLU -lglut -lGLEW
 

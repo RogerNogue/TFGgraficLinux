@@ -29,8 +29,8 @@ mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),ve
 
 //posicio, intensitat
 vec4 llumsPuntuals[3] = vec4[3](
-	vec4(-10, 2, 5, 0.4),
-	vec4(-5, 1, -15, 0.3),
+	vec4(-10, 2, 5, 0.0),
+	vec4(-5, 1, -15, 0.0),
 	vec4(10,10,5, 0.4)
 	);
 
@@ -256,7 +256,7 @@ vec2 objectesEscena(vec3 punt){
 
 	//escena amb totes les figures
 	
-	return 
+	/*return 
 			opUnion(
 			opUnion(
 			opUnion(
@@ -264,8 +264,10 @@ vec2 objectesEscena(vec3 punt){
 			opUnion(
 			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
 						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
+*/
+	//return opUnion(sdSphere(punt, 4, translation(0,3,-5), 1), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
 	
-	/*
+	
 	//floor
 	vec2 floor = udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10);
 
@@ -369,11 +371,12 @@ vec2 objectesEscena(vec3 punt){
 	vec2 patiSencer = opUnion(opUnion(opUnion(unioPati, pilotes), porteria2), porteria1);
 
 	//unio escena
-	vec2 escena = opUnion(opUnion(patiSencer, edificis), floor);
+	//vec2 escena = opUnion(opUnion(patiSencer, edificis), floor);
+	vec2 escena = opUnion(edificis, floor);
 
 	//retorn del resultat
 	return escena;
-	*/
+	
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }
@@ -514,9 +517,9 @@ void main()
 		vec4 infoSpecular = specularColor(int(material));
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
 			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)) * (lightsReached[i]*llumsPuntuals[i].w ); //"Multiply the shininess by 128!"
-			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
+			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
 			//test ombres suaus
-			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min(dmin[i]/0.2, 1); 
+			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min(dmin[i]/0.2, 1); 
 		}
 		//calcul component reflexio
 		float materialColorReflex = materialComponentReflexio(puntcolisio, vObs);
