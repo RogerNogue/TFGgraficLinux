@@ -29,9 +29,9 @@ mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),ve
 
 //posicio, intensitat
 vec4 llumsPuntuals[3] = vec4[3](
-	vec4(-10, 2, 5, 0.0),
-	vec4(-5, 1, -15, 0.0),
-	vec4(10,10,5, 0.4)
+	vec4(15,25,15, 0.8),
+	vec4(-10, 2, 5, 0.),
+	vec4(-5, 1, -15, 0.)
 	);
 
 	//vec4(10,20,5, 0.9)
@@ -113,6 +113,20 @@ vec4 materialSpecular[11] = vec4[11](
 	vec4(0.29, 0.29, 0.29, 0.088),
 	vec4(0.8, 0.8, 0.5, 0.078)
 	);
+
+float materialReflexion[11] = float[11](
+	1,
+	0.2,
+	0.1,
+	0.4,
+	0.4,
+	0.4,
+	0.01,
+	0.01,
+	0.01,
+	0.01,
+	0.2
+	);
 vec3 ambientColor(int material){
 	if(material < 0 || material > 11) return vec3(1,1,1);
 	return materialAmbient[material-1];
@@ -126,6 +140,11 @@ vec3 diffuseColor(int material){
 vec4 specularColor(int material){
 	if(material < 0 || material > 11) return vec4(1,1,1, 1);
 	return materialSpecular[material-1];
+}
+
+float reflectionColor(int material){
+	if(material < 0 || material > 11) return 0;
+	return materialReflexion[material-1];
 }
 
 vec3 crossProduct(vec3 a, vec3 b){
@@ -255,8 +274,8 @@ vec2 objectesEscena(vec3 punt){
 	//return opUnion(opUnion(sdSphere(punt, 1, translation(0,2,-1), 2.), udBox(punt, translation(0,0,-1), vec3(1,1,1), 6.)), udBox(punt, translation(0,-1,0), vec3(5, 0.01, 5), 10));
 
 	//escena amb totes les figures
-	
-	/*return 
+	/*
+	return 
 			opUnion(
 			opUnion(
 			opUnion(
@@ -265,9 +284,9 @@ vec2 objectesEscena(vec3 punt){
 			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
 						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
 */
-	//return opUnion(sdSphere(punt, 4, translation(0,3,-5), 1), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
+	return opUnion(sdSphere(punt, 4, translation(0,3,-5), 1), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
 	
-	
+	/*
 	//floor
 	vec2 floor = udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10);
 
@@ -371,12 +390,12 @@ vec2 objectesEscena(vec3 punt){
 	vec2 patiSencer = opUnion(opUnion(opUnion(unioPati, pilotes), porteria2), porteria1);
 
 	//unio escena
-	//vec2 escena = opUnion(opUnion(patiSencer, edificis), floor);
-	vec2 escena = opUnion(edificis, floor);
+	vec2 escena = opUnion(opUnion(patiSencer, edificis), floor);
+	//vec2 escena = opUnion(edificis, floor);
 
 	//retorn del resultat
 	return escena;
-	
+	*/
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }
@@ -392,10 +411,10 @@ vec3 estimacioNormal(vec3 p){
 
 void lightMarching(vec3 obs, vec3 puntcolisio){
 	//funcio que va des del punt de colisio del algorisme cap a la llum
-	puntcolisio += 5*EPSILON*estimacioNormal(puntcolisio);
+	puntcolisio += 1*estimacioNormal(puntcolisio);
 	//puntcolisio = puntcolisio + 0.5*estimacioNormal(puntcolisio);
 	for(int j = 0; j < llumsPuntuals.length(); ++j){
-		float profCercaLlum =2*EPSILON; //quan el valor es baix, sembla que xoca amb el mateix objecte
+		float profCercaLlum =0.5; //quan el valor es baix, sembla que xoca amb el mateix objecte
 		vec3 direccioLlum = normalize(llumsPuntuals[j].xyz - puntcolisio);
 		for(int i = 0; i <= MAX_MARCHING_LIGHT_STEPS; ++i){
 			vec3 puntActual = puntcolisio + profCercaLlum * direccioLlum;
@@ -403,7 +422,7 @@ void lightMarching(vec3 obs, vec3 puntcolisio){
 			float distLlum = length(llumsPuntuals[j].xyz - (puntActual));
 
 			//calcul distancia mes propera per calcular les ombres suaus mes endavant
-			if(profCercaLlum > 0.4 && distColisio < dmin[j])	dmin[j] = distColisio;
+			if(profCercaLlum > 0.8 && distColisio < dmin[j])	dmin[j] = distColisio;
 
 			//si no arriba a la llum, sortirm del bucle
 			if(distColisio < EPSILON){
@@ -461,6 +480,12 @@ vec2 rayMarching(vec3 obs, vec3 dir){
 }
 
 float materialComponentReflexio(vec3 puntcolisio, vec3 obs){
+	
+	
+	return -1;
+}
+/*
+vec3 colorObjecteReflexio(vec3 puntcolisio, vec3 obs){
 	vec3 raigObsPunt = normalize(puntcolisio - obs);
 	vec3 dirReflexio = reflect(raigObsPunt, estimacioNormal(puntcolisio));
 	float profCercaReflexio =2*EPSILON;
@@ -473,10 +498,89 @@ float materialComponentReflexio(vec3 puntcolisio, vec3 obs){
 		if(distColisio < EPSILON){
 			return propietatsObjecteProper.y;
 		}
-		
 		profCercaReflexio += distColisio;
+		}
+}
+*/
+
+vec3 colorObjecteReflexio(vec3 puntcolisio, vec3 obs){
+	vec3 raigObsPunt = normalize(puntcolisio - obs);
+	vec3 dirReflexio = reflect(raigObsPunt, estimacioNormal(puntcolisio));
+	float profCercaReflexio =2*EPSILON;
+	vec2 propietatsObjecteProper;
+	int reflexioForaEscena = 0;//per controlar si la reflexio es un punt del fons
+	float distColisio;
+	vec3 puntFons;
+	vec3 puntActual;
+	for(int i = 0; i < MAX_REFLECTION_STEPS+1; ++i){
+		puntActual = puntcolisio + profCercaReflexio * dirReflexio;
+		propietatsObjecteProper = objectesEscena(puntActual);
+		distColisio = propietatsObjecteProper.x;
+		
+		//cas que ja hem arribat practicament al puunt
+		if(distColisio < EPSILON){
+			break;
+		}
+		profCercaReflexio += distColisio;
+		if(i == MAX_REFLECTION_STEPS ){
+			reflexioForaEscena = 1;
+			break;
+		}
 	}
-	return -1;
+	puntFons = puntcolisio + distColisio * dirReflexio;
+	//ara anem del punt cap a les llums
+	vec3 puntReflexio = puntActual;//abans calculava la normal de puntActual
+	vec3 normal = estimacioNormal(puntReflexio);
+	int llums[3] = int[3](0, 0, 0);
+	float intensitatEspecular[3] = float[3](0,0,0);
+	//puntcolisio = puntcolisio + 0.5*estimacioNormal(puntcolisio);
+	for(int j = 0; j < llumsPuntuals.length(); ++j){
+		float profCercaLlum =0.5; //quan el valor es baix, sembla que xoca amb el mateix objecte
+		vec3 direccioLlum = normalize(llumsPuntuals[j].xyz - puntReflexio);
+		for(int i = 0; i <= MAX_MARCHING_LIGHT_STEPS; ++i){
+			vec3 puntActual = puntReflexio + profCercaLlum * direccioLlum;
+			float distColisio = objectesEscena(puntActual).x;
+			float distLlum = length(llumsPuntuals[j].xyz - (puntActual));
+
+			//si no arriba a la llum, sortirm del bucle
+			if(distColisio < EPSILON){
+				//continue;
+				break;
+			}
+		
+			if(distLlum < distColisio){
+				llums[j] = 1;
+				//calcul especular
+				vec3 half = normalize(direccioLlum + normalize(puntcolisio - puntReflexio));
+				vec3 n = estimacioNormal(puntReflexio);
+				if(dot(n, direccioLlum) > 0)
+					intensitatEspecular[j] = clamp(dot(n, half), 0, 1);
+			}
+			profCercaLlum += distColisio;
+		}
+	}
+	vec3 color;
+	//calculo el color per a retornarlo
+	if(reflexioForaEscena == 1){
+	//cas si el punt esta dins de l escena
+		color = ambientColor(int(propietatsObjecteProper.y));
+		vec4 infoSpecular = specularColor(int(propietatsObjecteProper.y));
+		for(int i = 0; i < llumsPuntuals.length(); ++i){
+			color += infoSpecular.xyz * pow(intensitatEspecular[i], (infoSpecular.w*128)) * (llums[i]*llumsPuntuals[i].w ); //"Multiply the shininess by 128!"
+			color += diffuseColor(int(propietatsObjecteProper.y)) * (llums[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
+			//test ombres suaus, per ara no he aconseguit fer les funcionar correctament
+			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min((dmin[i]/0.25), 1); 
+			
+		}
+	}
+	else{
+		if(puntFons.y <= 0){
+			color = vec3(1, 0.75, 0.5);
+		}else{
+			color = vec3(puntFons.y/25, puntFons.y/12, 1);
+		}
+	}
+	return color;
 }
 
 void main()
@@ -518,15 +622,17 @@ void main()
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
 			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)) * (lightsReached[i]*llumsPuntuals[i].w ); //"Multiply the shininess by 128!"
 			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
-			//test ombres suaus
-			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min(dmin[i]/0.2, 1); 
+			//test ombres suaus, per ara no he aconseguit fer les funcionar correctament
+			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min((dmin[i]/0.25), 1); 
 		}
 		//calcul component reflexio
-		float materialColorReflex = materialComponentReflexio(puntcolisio, vObs);
+		vec3 colorRef = colorObjecteReflexio(puntcolisio, vObs);
 		//com que no hi ha manera facil de saber exactament el color del objecte del que agafarem la reflexio
 		//utilitzare alguna de les propietats del material
 		//(1-c)*color pixel + c*color punt reflexat
-		if(materialColorReflex > 0) color = (1-infoSpecular.w*0.5)*color + infoSpecular.w*0.5*ambientColor(int(materialColorReflex));
+		//if(materialColorReflex > 0) color = (1-infoSpecular.w*0.5)*color + infoSpecular.w*0.5*ambientColor(int(materialColorReflex));
+		color = (1-reflectionColor(int(material)))*color + reflectionColor(int(material))*colorRef;
+		//color = colorRef;
 		FragColor = vec4(color, 1.0);
 	}else{
 		if(puntcolisio.y <= 0){
