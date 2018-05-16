@@ -1,10 +1,9 @@
-#include <GL/glew.h>
-#include <GL/freeglut.h>
+#include <GL\glew.h>
+#include <GL\freeglut.h>
 #include <iostream>
-#include <fstream>
 #include <stdio.h>
-#include "dataStructures/ogldev_math_3d.h"
-#include "dataStructures/ogldev_util.h"
+#include "dataStructures\ogldev_math_3d.h"
+#include "dataStructures\ogldev_util.h"
 
 
 using namespace std;
@@ -29,6 +28,7 @@ const float zNear = 0.1;
 const float zFar = 100;
 float widthPixels = 1024;
 float heightPixels = 1024;
+float time = 0.;
 
 static void RenderSceneCB()
 {
@@ -49,9 +49,9 @@ static void CreateVertexBuffer()
 {
 	Vector3f Vertices[6];
 	Vertices[0] = Vector3f(1.0f, 1.0f, 0.0f);
-	Vertices[1] = Vector3f(-1.0f, -1.0f, 0.0f); 
+	Vertices[1] = Vector3f(-1.0f, -1.0f, 0.0f);
 	Vertices[2] = Vector3f(-1.0f, 1.0f, 0.0f);
-	
+
 	Vertices[3] = Vector3f(1.0f, 1.0f, 0.0f);
 	Vertices[4] = Vector3f(1.0f, -1.0f, 0.0f);
 	Vertices[5] = Vector3f(-1.0f, -1.0f, 0.0f);
@@ -100,13 +100,14 @@ void static uniformDeclaration(GLuint ShaderProgram) {
 	glUniform3f(glGetUniformLocation(ShaderProgram, "vObs"), oBSx, oBSy, oBSz);
 	glUniform3f(glGetUniformLocation(ShaderProgram, "vVrp"), vRPx, vRPy, vRPz);
 	glUniform3f(glGetUniformLocation(ShaderProgram, "vUp"), uPx, uPy, uPz);
-	
+
 	glUniform1f(glGetUniformLocation(ShaderProgram, "fovy"), fovy);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "aspect"), aspect);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "znear"), zNear);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "zfar"), zFar);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "widthpixels"), widthPixels);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "heightpixels"), heightPixels);
+	glUniform1f(glGetUniformLocation(ShaderProgram, "time"), time);
 }
 
 static void CompileShaders()
@@ -178,6 +179,8 @@ static void InitializeGlutCallbacks()
 	glutDisplayFunc(RenderSceneCB);
 	glutKeyboardFunc(processKeys);
 	glutReshapeFunc(updateWindowValues);
+	//temps
+	time += 0.01;
 }
 
 int main(int argc, char** argv)
