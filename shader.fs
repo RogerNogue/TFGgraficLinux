@@ -55,7 +55,7 @@ float relaxationIndex = 1.9;//pertany a [1, 2)
 float obscurancia = 0;
 float epsilonOcclusion = 0.5;
 
-int outputPassos = 0;
+int outputPassos = 1;
 int passosAlgorisme = 0;
 
 /*

@@ -1,9 +1,9 @@
-#include <GL\glew.h>
-#include <GL\freeglut.h>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <stdio.h>
-#include "dataStructures\ogldev_math_3d.h"
-#include "dataStructures\ogldev_util.h"
+#include "dataStructures/ogldev_math_3d.h"
+#include "dataStructures/ogldev_util.h"
 
 
 using namespace std;
@@ -28,7 +28,8 @@ const float zNear = 0.1;
 const float zFar = 100;
 float widthPixels = 1024;
 float heightPixels = 1024;
-float time = 0.;
+float currentTime = 0.;
+int pastTime;
 
 static void RenderSceneCB()
 {
@@ -107,7 +108,7 @@ void static uniformDeclaration(GLuint ShaderProgram) {
 	glUniform1f(glGetUniformLocation(ShaderProgram, "zfar"), zFar);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "widthpixels"), widthPixels);
 	glUniform1f(glGetUniformLocation(ShaderProgram, "heightpixels"), heightPixels);
-	glUniform1f(glGetUniformLocation(ShaderProgram, "time"), time);
+	glUniform1f(glGetUniformLocation(ShaderProgram, "time"), currentTime);
 }
 
 static void CompileShaders()
@@ -174,13 +175,22 @@ void updateWindowValues(int width, int height) {
 	CompileShaders();
 }
 
+void idle()
+{
+	int t = glutGet(GLUT_ELAPSED_TIME);
+
+	currentTime += (t - pastTime) / 1000.0f;
+	pastTime = t;
+}
+
 static void InitializeGlutCallbacks()
 {
 	glutDisplayFunc(RenderSceneCB);
 	glutKeyboardFunc(processKeys);
 	glutReshapeFunc(updateWindowValues);
+	glutIdleFunc(idle);
 	//temps
-	time += 0.01;
+	pastTime = glutGet(GLUT_ELAPSED_TIME);
 }
 
 int main(int argc, char** argv)
