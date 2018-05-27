@@ -30,6 +30,7 @@ float widthPixels = 1024;
 float heightPixels = 1024;
 float currentTime = 0.;
 int pastTime;
+bool escenaInteractiva = false;
 
 static void RenderSceneCB()
 {
@@ -180,6 +181,10 @@ void idle()
 	int t = glutGet(GLUT_ELAPSED_TIME);
 
 	currentTime += (t - pastTime) / 1000.0f;
+	if (escenaInteractiva) {
+		CompileShaders();
+		glutPostRedisplay();
+	}
 	pastTime = t;
 }
 

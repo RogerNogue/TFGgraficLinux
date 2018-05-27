@@ -29,9 +29,10 @@ mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),ve
 
 //posicio, intensitat
 vec4 llumsPuntuals[3] = vec4[3](
-	vec4(15,25,15, 0.5),
+	//vec4(15,25,15, 0.2),
+	vec4(15,8,15, 0.3),
 	vec4(-10, 2, 5, 0.4),
-	vec4(-5, 1, -15, 0.3)
+	vec4(-10, 5, -12, 0.7) //es bona per a l escena d ombres suaus
 	);
 
 	//vec4(10,20,5, 0.9)
@@ -117,18 +118,18 @@ vec4 materialSpecular[11] = vec4[11](
 	vec4(0.8, 0.8, 0.5, 0.078)
 	);
 
-float materialReflexion[11] = float[11](
-	1,
-	0.2,
-	0.1,
-	0.2,
-	0.2,
-	0.2,
-	0.01,
-	0.01,
-	0.01,
-	0.0,
-	0.02
+vec3 materialReflection[11] = vec3[11](
+	vec3(1, 1, 1),
+	vec3(0.2, 0.22, 0.25),
+	vec3(0.25, 0.22, 0.2),
+	vec3(0.2, 0.2, 0.2),
+	vec3(0.2, 0.2, 0.2),
+	vec3(0.2, 0.2, 0.2),
+	vec3(0.01, 0.01, 0.01),
+	vec3(0.01, 0.01, 0.01),
+	vec3(0.01, 0.01, 0.01),
+	vec3(0.001, 0.001, 0.001),
+	vec3(0.02, 0.02, 0.02)
 	);
 vec3 ambientColor(int material){
 	if(material < 0 || material > 11) return vec3(1,1,1);
@@ -145,9 +146,9 @@ vec4 specularColor(int material){
 	return materialSpecular[material-1];
 }
 
-float reflectionColor(int material){
-	if(material < 0 || material > 11) return 0;
-	return materialReflexion[material-1];
+vec3 reflectionColor(int material){
+	if(material < 0 || material > 11) return vec3(0,0,0);
+	return materialReflection[material-1];
 }
 
 vec3 crossProduct(vec3 a, vec3 b){
@@ -273,9 +274,16 @@ vec2 objectesEscena(vec3 punt){
 	//return opSubstraction(udBox(punt, translation(0,0,0), 10.), sdSphere(punt, 1.5, translation(0,0,0), 10.));
 	//return opIntersection(sdSphere(punt, 1.5, translation(0,0,0), 10.), udBox(punt, translation(0,0,0), 10.));
 
-	//escena test
-	//return opUnion(opUnion(sdSphere(punt, 1, translation(0,2,-1), 2.), udBox(punt, translation(0,0,-1), vec3(1,1,1), 6.)), udBox(punt, translation(0,-1,0), vec3(5, 0.01, 5), 10));
+	//escena vaires fonts de llum, les llums han de tenir molta intensitat
+	//esfera sobre pla
+	//return opUnion(sdSphere(punt, 4, translation(0,3,-5), 3), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
 
+	//escena ambient occlusion, les llums han de tenir 0 intensitat
+	//return opUnion(sdTorus(punt, translation(0,0,0), 5), udBox(punt, translation(0,-1,-1), vec3(6, 0.01, 6), 10));
+	//escena ombres suaus
+	//return opUnion(udBox(punt, translation(0,4,0), vec3(3,8,3), 10.), udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10));
+	//escena moviment
+	//return opUnion(sdSphere(punt, 4, translation(2*sin(time),3,-5), 3), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
 	//escena amb totes les figures
 	/*
 	return 
@@ -286,10 +294,10 @@ vec2 objectesEscena(vec3 punt){
 			opUnion(
 			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
 						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
-*/
-	return opUnion(sdSphere(punt, 4, translation(time,3,-5), 1), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
+	*/
+	//escena reflexions
+	//return opUnion(sdSphere(punt, 4, translation(sin(time),3,-5), 1), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
 	
-	/*
 	//floor
 	vec2 floor = udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10);
 
@@ -398,7 +406,7 @@ vec2 objectesEscena(vec3 punt){
 	
 	//retorn del resultat
 	return escena;
-	*/
+	
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }
@@ -424,14 +432,15 @@ void lightMarching(vec3 obs, vec3 puntcolisio){
 			float distColisio = objectesEscena(puntActual).x;
 			float distLlum = length(llumsPuntuals[j].xyz - (puntActual));
 
-			//calcul distancia mes propera per calcular les ombres suaus mes endavant
-			if(distColisio < dmin[j] && distColisio > 0.)	dmin[j] = distColisio;
-
 			//si no arriba a la llum, sortirm del bucle
 			if(distColisio < EPSILON){
 				//continue;
 				break;
 			}
+
+			//calcul distancia mes propera per calcular les ombres suaus mes endavant
+			//if(distColisio < dmin[j] && distColisio > 0.)	dmin[j] = distColisio;
+			if(distColisio < dmin[j])	dmin[j] = distColisio;
 		
 			if(distLlum < distColisio){
 				lightsReached[j] = 1;
@@ -621,9 +630,35 @@ void main()
 		//utilitzare alguna de les propietats del material
 		//(1-c)*color pixel + c*color punt reflexat
 		//if(materialColorReflex > 0) color = (1-infoSpecular.w*0.5)*color + infoSpecular.w*0.5*ambientColor(int(materialColorReflex));
-		color = (1-reflectionColor(int(material)))*color + reflectionColor(int(material))*colorRef;
+		vec3 indexReflexMaterial = reflectionColor(int(material));
+		float angleFresnel = radians(dot((vObs-puntcolisio), normal));//angle entre vec punt-obs i normal
+		vec3 coefReflexio = indexReflexMaterial + (1 - indexReflexMaterial)*pow((1 - angleFresnel), 5);//formula fresnel, utilitzo el index de reflexio con a R0 o F0
+		color = (1-coefReflexio)*color + coefReflexio*colorRef;
 		//color = colorRef;
-		if(outputPassos == 1) color = vec3(float(passosAlgorisme/100), 1-min(float(passosAlgorisme/50), 1), 1-min(float(1-passosAlgorisme/25), 1));
+
+		//'0': 'Navy','0.25': 'Blue','0.5': 'Green','0.75': 'Yellow','1': 'Red'
+		//color = vec3(float(passosAlgorisme/100), min(float(passosAlgorisme/80), 1), 1-min(float(passosAlgorisme/50), 1));
+		//intervals: 15-25, 35-45, 55-65, 75-85
+		if(outputPassos == 1){
+			if(passosAlgorisme < 20){
+				color = vec3(0, 0, 0.5);
+			}
+			else if(passosAlgorisme < 40){
+				color = vec3(0, 0, 1);
+			}
+			else if(passosAlgorisme < 60){
+				color = vec3(0, 1, 0);
+			}
+			else if(passosAlgorisme < 80){
+				color = vec3(1, 1, 0);
+			}
+			else{
+				color = vec3(1, 0, 0);
+			}
+			
+
+
+		}
 		//blau, menys de 26 iteraions, verd menys de 51
 		FragColor = vec4(color, 1.0);
 	}else{
