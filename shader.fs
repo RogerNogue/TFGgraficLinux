@@ -56,7 +56,7 @@ float relaxationIndex = 1.9;//pertany a [1, 2)
 float obscurancia = 0;
 float epsilonOcclusion = 0.5;
 
-int outputPassos = 1;
+int outputPassos = 0;
 int passosAlgorisme = 0;
 
 /*
@@ -282,22 +282,23 @@ vec2 objectesEscena(vec3 punt){
 	//return opUnion(sdTorus(punt, translation(0,0,0), 5), udBox(punt, translation(0,-1,-1), vec3(6, 0.01, 6), 10));
 	//escena ombres suaus
 	//return opUnion(udBox(punt, translation(0,4,0), vec3(3,8,3), 10.), udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10));
+	//return opUnion(udBox(punt, translation(0,8,0), vec3(3,8,3), 10.), udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10));
 	//escena moviment
 	//return opUnion(sdSphere(punt, 4, translation(2*sin(time),3,-5), 3), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
 	//escena amb totes les figures
-	/*
+	
 	return 
 			opUnion(
 			opUnion(
 			opUnion(
 			opUnion(
 			opUnion(
-			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 2.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
+			opUnion( opUnion(sdSphere(punt, 1, translation(5,0,0), 7.), udBox(punt, translation(0,0,0), vec3(1,1,1), 8.)), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10)), sdTorus(punt, translation(-5,-0.5,0), 1)),  opIntersection(sdCylinder(punt, translation(4.5,-1, -8), 3), udBox(punt, translation(5,0,-8),vec3(2,2,2), 3)))
 						,sdCappedCylinder(punt, vec2(1, 1), translation(-5,0,-4), 4)), opIntersection(sdCone(punt, translation(0,0,-5)*rotation(0,90), 5), udBox(punt, translation(0,0,-5),vec3(2,2,2), 5.))), opSubstraction(udBox(punt, translation(5,0,-4), vec3(1, 1, 1), 6), sdSphere(punt, 1.5, translation(5,0,-4), 6))) ;
-	*/
+	
 	//escena reflexions
 	//return opUnion(sdSphere(punt, 4, translation(sin(time),3,-5), 1), udBox(punt, translation(0,-1,-5), vec3(10, 0.01, 10), 10));
-	
+	/*
 	//floor
 	vec2 floor = udBox(punt, translation(0,0,-5), vec3(30, 0.01, 30), 10);
 
@@ -406,7 +407,7 @@ vec2 objectesEscena(vec3 punt){
 	
 	//retorn del resultat
 	return escena;
-	
+	*/
 	//return min( sdSphere(punt, 1, translation(-2,1,-2)), udBox(punt, translation(2,1,-2))); //amb els canvis dels materials no funciona
 	
 }
@@ -422,7 +423,7 @@ vec3 estimacioNormal(vec3 p){
 
 void lightMarching(vec3 obs, vec3 puntcolisio){
 	//funcio que va des del punt de colisio del algorisme cap a la llum
-	puntcolisio += 1*estimacioNormal(puntcolisio);
+	puntcolisio += 0.001*estimacioNormal(puntcolisio);
 	//puntcolisio = puntcolisio + 0.5*estimacioNormal(puntcolisio);
 	for(int j = 0; j < llumsPuntuals.length(); ++j){
 		float profCercaLlum =0.5; //quan el valor es baix, sembla que xoca amb el mateix objecte
@@ -454,6 +455,8 @@ void lightMarching(vec3 obs, vec3 puntcolisio){
 		}
 	}
 }
+
+// Comentari funció
 
 vec2 rayMarching(vec3 obs, vec3 dir){
 	//algorisme trobada del punt que pertany al fragment
@@ -612,6 +615,7 @@ void main()
 	vec3 normal = estimacioNormal(puntcolisio);
 	vec3 pAux = puntcolisio + epsilonOcclusion*normal;
 	obscurancia = (epsilonOcclusion-objectesEscena(pAux).x)/epsilonOcclusion;
+	//obscurancia = 0.0;
 
 	//calcul color
 	if(profunditat < MAX_DIST){
@@ -620,9 +624,9 @@ void main()
 		vec4 infoSpecular = specularColor(int(material));
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
 			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)) * (lightsReached[i]*llumsPuntuals[i].w ); //"Multiply the shininess by 128!"
-			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
+			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
 			//test ombres suaus, per ara no he aconseguit fer les funcionar correctament
-			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min((dmin[i]/0.8), 1); 
+			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min((dmin[i]/0.8), 1); 
 		}
 		//calcul component reflexio
 		vec3 colorRef = colorObjecteReflexio(puntcolisio, vObs);
@@ -631,7 +635,7 @@ void main()
 		//(1-c)*color pixel + c*color punt reflexat
 		//if(materialColorReflex > 0) color = (1-infoSpecular.w*0.5)*color + infoSpecular.w*0.5*ambientColor(int(materialColorReflex));
 		vec3 indexReflexMaterial = reflectionColor(int(material));
-		float angleFresnel = radians(dot((vObs-puntcolisio), normal));//angle entre vec punt-obs i normal
+		float angleFresnel = dot(normalize(vObs-puntcolisio), normal);//angle entre vec punt-obs i normal
 		vec3 coefReflexio = indexReflexMaterial + (1 - indexReflexMaterial)*pow((1 - angleFresnel), 5);//formula fresnel, utilitzo el index de reflexio con a R0 o F0
 		color = (1-coefReflexio)*color + coefReflexio*colorRef;
 		//color = colorRef;
