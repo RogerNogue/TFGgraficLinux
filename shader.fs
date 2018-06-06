@@ -30,9 +30,9 @@ mat4 identityTransf =	mat4(vec4(1, 0, 0, 0),vec4(0, 1, 0, 0),vec4(0, 0, 1, 0),ve
 //posicio, intensitat
 vec4 llumsPuntuals[3] = vec4[3](
 	//vec4(15,25,15, 0.2),
-	vec4(15,8,15, 0.3),
-	vec4(-10, 2, 5, 0.4),
-	vec4(-10, 5, -12, 0.7) //es bona per a l escena d ombres suaus
+	vec4(15,  8, 15, 0.3),
+	vec4(-10, 8, 5, 0.2),
+	vec4(-10, 7, -12, 0.3) //es bona per a l escena d ombres suaus
 	);
 
 	//vec4(10,20,5, 0.9)
@@ -55,6 +55,11 @@ float relaxationIndex = 1.9;//pertany a [1, 2)
 
 float obscurancia = 0;
 float epsilonOcclusion = 0.5;
+float distIniciCalculOmbresSuaus = 0.5;
+
+//booleans per a probar cadascuna de les implementacions
+bool reflexio = true;
+bool ombresSuaus = true;
 
 int outputPassos = 0;
 int passosAlgorisme = 0;
@@ -62,7 +67,7 @@ int passosAlgorisme = 0;
 /*
 http://devernay.free.fr/cours/opengl/materials.html
 materials:
-1 -> emerald
+1 -> mirror
 2 -> jade
 3 -> ruby
 4 -> red plastic
@@ -71,7 +76,7 @@ materials:
 7 -> red rubber
 8 -> cyan rubber
 9 -> green rubber
-10 -> pearl
+10 -> cement
 11 -> yellow
 */
 
@@ -120,14 +125,14 @@ vec4 materialSpecular[11] = vec4[11](
 
 vec3 materialReflection[11] = vec3[11](
 	vec3(1, 1, 1),
-	vec3(0.2, 0.22, 0.25),
-	vec3(0.25, 0.22, 0.2),
-	vec3(0.2, 0.2, 0.2),
-	vec3(0.2, 0.2, 0.2),
-	vec3(0.2, 0.2, 0.2),
-	vec3(0.01, 0.01, 0.01),
-	vec3(0.01, 0.01, 0.01),
-	vec3(0.01, 0.01, 0.01),
+	vec3(0.06, 0.06, 0.06),
+	vec3(0.06, 0.06, 0.06),
+	vec3(0.08, 0.08, 0.08),
+	vec3(0.08, 0.08, 0.08),
+	vec3(0.08, 0.08, 0.08),
+	vec3(0.05, 0.05, 0.05),
+	vec3(0.05, 0.05, 0.05),
+	vec3(0.05, 0.05, 0.05),
 	vec3(0.001, 0.001, 0.001),
 	vec3(0.02, 0.02, 0.02)
 	);
@@ -426,7 +431,7 @@ void lightMarching(vec3 obs, vec3 puntcolisio){
 	puntcolisio += 0.001*estimacioNormal(puntcolisio);
 	//puntcolisio = puntcolisio + 0.5*estimacioNormal(puntcolisio);
 	for(int j = 0; j < llumsPuntuals.length(); ++j){
-		float profCercaLlum =0.5; //quan el valor es baix, sembla que xoca amb el mateix objecte
+		float profCercaLlum = distIniciCalculOmbresSuaus; //quan el valor es baix, sembla que xoca amb el mateix objecte
 		vec3 direccioLlum = normalize(llumsPuntuals[j].xyz - puntcolisio);
 		for(int i = 0; i <= MAX_MARCHING_LIGHT_STEPS; ++i){
 			vec3 puntActual = puntcolisio + profCercaLlum * direccioLlum;
@@ -441,7 +446,8 @@ void lightMarching(vec3 obs, vec3 puntcolisio){
 
 			//calcul distancia mes propera per calcular les ombres suaus mes endavant
 			//if(distColisio < dmin[j] && distColisio > 0.)	dmin[j] = distColisio;
-			if(distColisio < dmin[j])	dmin[j] = distColisio;
+			if(profCercaLlum > distIniciCalculOmbresSuaus && distColisio < dmin[j])	dmin[j] = distColisio;
+			//if(distColisio < dmin[j])	dmin[j] = distColisio;
 		
 			if(distLlum < distColisio){
 				lightsReached[j] = 1;
@@ -560,7 +566,7 @@ vec3 colorObjecteReflexio(vec3 puntcolisio, vec3 obs){
 		color = ambientColor(int(propietatsObjecteProper.y));
 		vec4 infoSpecular = specularColor(int(propietatsObjecteProper.y));
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
-			color += infoSpecular.xyz * pow(intensitatEspecular[i], (infoSpecular.w*128)) * (llums[i]*llumsPuntuals[i].w ); //"Multiply the shininess by 128!"
+			color += infoSpecular.xyz * pow(intensitatEspecular[i], (infoSpecular.w*128)) * (llums[i]*llumsPuntuals[i].w ); //Multiply the shininess by 128!
 			//color += diffuseColor(int(propietatsObjecteProper.y)) * (llums[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntReflexio)), 0, 1);
 			//test ombres suaus, per ara no he aconseguit fer les funcionar correctament
 			color += diffuseColor(int(propietatsObjecteProper.y)) * (llums[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min((dmin[i]/0.25), 1); 
@@ -623,22 +629,25 @@ void main()
 		vec3 color = ambientColor(int(material)) * (1-obscurancia);
 		vec4 infoSpecular = specularColor(int(material));
 		for(int i = 0; i < llumsPuntuals.length(); ++i){
-			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)) * (lightsReached[i]*llumsPuntuals[i].w ); //"Multiply the shininess by 128!"
-			color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
+			color += infoSpecular.xyz * pow(specularIntensity[i], (infoSpecular.w*128)) * (lightsReached[i]*llumsPuntuals[i].w ); //Multiply the shininess by 128!
+			if(ombresSuaus){
+				color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min((dmin[i]/0.8), 1); 
+			}else{
+				color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1);
+			}
 			//test ombres suaus, per ara no he aconseguit fer les funcionar correctament
-			//color += diffuseColor(int(material)) * (lightsReached[i]*llumsPuntuals[i].w ) * clamp(dot(normal, normalize(llumsPuntuals[i].xyz - puntcolisio)), 0, 1) *min((dmin[i]/0.8), 1); 
+			
 		}
 		//calcul component reflexio
-		vec3 colorRef = colorObjecteReflexio(puntcolisio, vObs);
-		//com que no hi ha manera facil de saber exactament el color del objecte del que agafarem la reflexio
-		//utilitzare alguna de les propietats del material
-		//(1-c)*color pixel + c*color punt reflexat
-		//if(materialColorReflex > 0) color = (1-infoSpecular.w*0.5)*color + infoSpecular.w*0.5*ambientColor(int(materialColorReflex));
-		vec3 indexReflexMaterial = reflectionColor(int(material));
-		float angleFresnel = dot(normalize(vObs-puntcolisio), normal);//angle entre vec punt-obs i normal
-		vec3 coefReflexio = indexReflexMaterial + (1 - indexReflexMaterial)*pow((1 - angleFresnel), 5);//formula fresnel, utilitzo el index de reflexio con a R0 o F0
-		color = (1-coefReflexio)*color + coefReflexio*colorRef;
+		if(reflexio){
+			vec3 colorRef = colorObjecteReflexio(puntcolisio, vObs);
+			vec3 indexReflexMaterial = reflectionColor(int(material));
+			float angleFresnel = dot(normalize(vObs-puntcolisio), normal);//angle entre vec punt-obs i normal
+			vec3 coefReflexio = indexReflexMaterial + (1 - indexReflexMaterial)*pow((1 - angleFresnel), 5);//formula fresnel, utilitzo el index de reflexio con a R0 o F0
+			color = (1-coefReflexio)*color + coefReflexio*colorRef;
+		}
 		//color = colorRef;
+		//color = vec3();
 
 		//'0': 'Navy','0.25': 'Blue','0.5': 'Green','0.75': 'Yellow','1': 'Red'
 		//color = vec3(float(passosAlgorisme/100), min(float(passosAlgorisme/80), 1), 1-min(float(passosAlgorisme/50), 1));
